@@ -1,0 +1,91 @@
+ <!DOCTYPE html>
+<html>
+    <head> 
+        <title>PicoW Webserver</title> 
+        <style>
+            /* Add any additional styling for your maze here */
+            #maze-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            }
+
+            .maze-row {
+            display: flex;
+            }
+
+            .wall-cell,
+            .open-cell {
+            width: 20px; /* Adjust as needed */
+            height: 20px; /* Adjust as needed */
+            border: 1px solid #000; /* Add border for better visibility */
+            }
+
+            .wall-cell {
+            background-color: #333; /* Color for walls */
+            }
+
+            .open-cell {
+            background-color: #fff; /* Color for open paths */
+            }
+          </style>
+    </head>
+    <body> <h1>PicoW Webserver</h1>
+        <br>
+        <h2>This bit is SSI: Yes</h2>
+        <p>Voltage: <!--#volt--></p>
+        <p>Temp: <!--#temp--> C</p>
+        <p>LED is: <!--#led--></p>
+        <p>Received Message: <!--#message--></p>
+        <br>
+        <h2>This bit is CGI:</h2>
+        <a href="/led.cgi?led=1"><button>Update Maze</button></a>
+        <a href="/led.cgi?led=0"><button>LED OFF</button></a>
+        <br>
+        <br>
+        <!-- <a href="/index.shtml">Refresh</a> -->
+
+        <div id="maze-container"></div>
+
+        
+
+        <script>
+            function updateMaze(data) {
+              const mazeContainer = document.getElementById('maze-container');
+              mazeContainer.innerHTML = ''; // Clear previous maze
+        
+              for (const row of data.maze) {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'maze-row';
+        
+                for (const cell of row) {
+                  const cellElement = document.createElement('div');
+                  cellElement.className = cell === 1 ? 'wall-cell' : 'open-cell';
+                  rowElement.appendChild(cellElement);
+                }
+        
+                mazeContainer.appendChild(rowElement);
+              }
+            }
+        
+            function fetchMazeData() {
+              // Make an HTTP request to your CGI script
+              fetch('/led.cgi')
+                .then(response => response.json())
+                .then(data => {
+                  // Update the maze with the received data
+                  updateMaze(data);
+                })
+                .catch(error => {
+                  console.error('Error fetching data:', error);
+                });
+            }
+        
+            // Call fetchMazeData to initially fetch and display the maze data
+            fetchMazeData();
+        
+            // Optionally, you can set up a periodic update (e.g., every 5 seconds)
+            // setInterval(fetchMazeData, 5000);
+          </script>
+   </body>
+</html>
