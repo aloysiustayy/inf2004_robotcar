@@ -173,11 +173,11 @@ void get_readings(__unused void *params)
         read_coordinates(ax, ay, az, mx, my, mz, coordinate);
 
         // Print the coordinates
-        printf("Coordinates: X=%f, Y=%f, Z=%f\n", coordinate[0], coordinate[1], coordinate[2]);
+        // printf("Coordinates: X=%f, Y=%f, Z=%f\n", coordinate[0], coordinate[1], coordinate[2]);
 
         // print data
-        printf("Accelerometer: X=%d, Y=%d, Z=%d\n", ax, ay, az);
-        printf("Magnetometer: X=%d, Y=%d, Z=%d, Heading=%.2f degrees\n", mx, my, mz, heading);
+        // printf("Accelerometer: X=%d, Y=%d, Z=%d\n", ax, ay, az);
+        // printf("Magnetometer: X=%d, Y=%d, Z=%d, Heading=%.2f degrees\n", mx, my, mz, heading);
 
         vTaskDelay(100);
     }

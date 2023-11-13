@@ -3,7 +3,9 @@
     "lwipopts.h": "c",
     "barcode_reader.h": "c",
     "motor.h": "c",
-    "magnetometer.h": "c"
+    "magnetometer.h": "c",
+    "cyw43_arch.h": "c",
+    "httpd.h": "c"
   },
   "cmake.configureOnOpen": true
 }

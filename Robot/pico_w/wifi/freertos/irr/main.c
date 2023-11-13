@@ -108,6 +108,7 @@ void task_recv_barcode_message(__unused void *params)
 {
     char receivedValue[100];
 
+    int counter = 0;
     for (;;)
     {
         vTaskDelay(100);
@@ -120,6 +121,14 @@ void task_recv_barcode_message(__unused void *params)
         {
             printf("Barcode: %s\n", receivedValue);
             set_barcode_data(receivedValue);
+        }
+        counter++;
+
+        if (counter >= 50)
+        {
+
+            char *maze_d = "'{ \"maze\": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]] }'";
+            set_maze_data(maze_d);
         }
     }
 }

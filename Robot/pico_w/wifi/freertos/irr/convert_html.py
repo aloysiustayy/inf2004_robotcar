@@ -31,6 +31,9 @@ for file in files:
         header = "HTTP/1.0 404 File not found\r\n"
     else:
         header = "HTTP/1.0 200 OK\r\n"
+        header += "Access-Control-Allow-Origin: *\n"
+        header += "Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+        header += "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\n"
 
     header += "Server: lwIP/pre-0.6 (http://www.sics.se/~adam/lwip/)\r\n"
 
