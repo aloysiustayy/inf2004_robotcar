@@ -33,7 +33,7 @@ cgi_led_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[])
     // }
 
     // Send the maze_data back to the client-side
-    httpd_resp_send(iIndex, maze_data, strlen(maze_data));
+    // httpd_resp_send(iIndex, maze_data, strlen(maze_data));
 
     return NULL;
     // Send the index page back to the user
