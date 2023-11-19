@@ -207,7 +207,7 @@ void vLaunch(void)
                 "webserverThread",
                 configMINIMAL_STACK_SIZE,
                 NULL,
-                tskIDLE_PRIORITY + 1UL,
+                tskIDLE_PRIORITY,
                 &task);
 
     TaskHandle_t barcodetask;
@@ -226,6 +226,14 @@ void vLaunch(void)
                 NULL,
                 tskIDLE_PRIORITY,
                 &detectLinesTask);
+
+    TaskHandle_t encoderTask;
+    xTaskCreate(encoder_main,
+                "encoderThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &encoderTask);
 
     magnetometer_main(); // Run mag
 

@@ -37,6 +37,26 @@ uint16_t normal_speed;
 
 char motor_command[100]; // receive from task_recv_msg_task
 
+//Define PID controller constants
+float Kp = 1.0;   //Proportional gain
+float Ki = 0.1;   //Integral gain
+float Kd = 0.01;  //Derivative gain
+
+//Function to compute control signal using PID control
+float compute_pid(float setpoint, float current_value, float *integral, float *prev_error) {
+    float error = setpoint - current_value;  //Calculate error by taking desired - current
+    
+    *integral += error;  //Update integral term
+    
+    float derivative = error - *prev_error;  //Calculate derivative term
+    
+    float control_signal = Kp * error + Ki * (*integral) + Kd * derivative;  //Compute control signal
+    
+    *prev_error = error;  //Update previous error in preparation for next iteration
+    
+    return control_signal;  //Return computed control signal
+}
+
 uint32_t
 degree_to_notch(uint8_t degree)
 {
@@ -142,6 +162,28 @@ void turn_left(uint8_t degree)
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
+}
+
+float pid_speed_left()
+{
+    float integral = 0.0;  //Integral term for PID control
+    float prev_error = 0.0;  //Previous error for PID control
+    float current_speed = get_speed(LEFT);
+    float control_pwm_signal = compute_pid(100, current_speed, &integral, &prev_error);
+
+    printf("current speed: %f, current_pid_signal value: %f\n", current_speed, control_pwm_signal);
+    return control_pwm_signal;
+}
+
+float pid_speed_right()
+{
+    float integral = 0.0;  //Integral term for PID control
+    float prev_error = 0.0;  //Previous error for PID control
+    float current_speed = get_speed(RIGHT);
+    float control_pwm_signal = compute_pid(100, current_speed, &integral, &prev_error);
+
+    printf("current speed: %f, current_pid_signal value: %f\n", current_speed, control_pwm_signal);
+    return control_pwm_signal;
 }
 
 void pwm_control()
