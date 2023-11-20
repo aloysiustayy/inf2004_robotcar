@@ -6,8 +6,8 @@
 // For moving average
 #define NUM_SAMPLES 4
 
-uint trigPin = 0;
-uint echoPin = 1;
+uint trigPin = 6;
+uint echoPin = 7;
 
 bool obstacleDetected;
 void echoPinInterrupt(uint gpio, uint32_t events);
