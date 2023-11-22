@@ -21,6 +21,7 @@
 #include "motor.h"
 #include "encoder.h"
 #include "magnetometer.h"
+#include "obstacle.h"
 
 #ifndef RUN_FREERTOS_ON_CORE
 #define RUN_FREERTOS_ON_CORE 0
@@ -39,6 +40,7 @@
 
 QueueHandle_t ir_queue_handle;
 QueueHandle_t barcode_queue_handle;
+QueueHandle_t ultrasonic_queue_handle;
 
 /*!
  * @brief Receives char[100] from Queue to print on serial monitor
@@ -69,37 +71,6 @@ void task_recv_ir_message(__unused void *params)
 
             // Set motor_command in motor.c
             set_motor_command(receivedValue);
-
-            // This part is to split "left=90" into "left" and 90
-            // Set for motor_command var in motor.h
-            // snprintf(
-            // motor_commands, sizeof(motor_commands), "%s", receivedValue);
-
-            // char *split_str[2];
-
-            // // Split the string by delim '='
-            // char *token = strtok(receivedValue, "=");
-
-            // // This will contain the first value
-            // split_str[0] = token;
-
-            // // This will contain the second value
-            // token        = strtok(NULL, "=");
-            // split_str[1] = token;
-
-            // uint8_t degree;
-
-            // // Convert the string to an integer using the atoi() function
-            // degree = atoi(split_str[1]);
-
-            // if (strcmp(split_str[0], "left") == 0)
-            // {
-            //     turn_left(degree);
-            // }
-            // else if (strcmp(split_str[0], "right") == 0)
-            // {
-            //     turn_right(degree);
-            // }
         }
     }
 }
@@ -122,13 +93,35 @@ void task_recv_barcode_message(__unused void *params)
             printf("Barcode: %s\n", receivedValue);
             set_barcode_data(receivedValue);
         }
-        counter++;
+    }
+}
 
-        if (counter >= 50)
+/*!
+ * @brief Receives char[100] from respective Queue
+ * @param[in] params Any parameter that could be passed in
+ * @return -
+ */
+void task_recv_ultrasonic_message(__unused void *params)
+{
+    char receivedValue[100];
+
+    for (;;)
+    {
+        vTaskDelay(100);
+        if (ultrasonic_queue_handle == NULL)
         {
+            ultrasonic_queue_handle = UltrasonicMessageHandler();
+        }
 
-            char *maze_d = "'{ \"maze\": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]] }'";
-            set_maze_data(maze_d);
+        if (xQueueReceive(ultrasonic_queue_handle, &receivedValue, portMAX_DELAY) == pdPASS)
+        {
+            printf("Motor: %s\n", receivedValue);
+
+            // Set motor_command in motor.c
+            set_motor_command(receivedValue);
+
+            // Send to webpage?
+
         }
     }
 }
@@ -149,6 +142,14 @@ void start_recv_msg_task()
                 NULL,
                 tskIDLE_PRIORITY,
                 &recv_barcode_task);
+
+    TaskHandle_t recv_ultrasonic_task;
+    xTaskCreate(task_recv_ultrasonic_message,
+                "task_recv_ultrasonic_messageTask",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &recv_ultrasonic_task);
 }
 
 void main_task(__unused void *params)
@@ -202,8 +203,6 @@ void main_task(__unused void *params)
     while (true)
     {
         vTaskDelay(100);
-        // adc_select_input(4);
-        // printf("web running");
     }
 
     cyw43_arch_deinit();
@@ -219,23 +218,24 @@ void vLaunch(void)
                 tskIDLE_PRIORITY + 1UL,
                 &task);
 
-    // TaskHandle_t barcodetask;
-    // xTaskCreate(barcodeLaunch,
-    //             "barcodeThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &barcodetask);
+    TaskHandle_t barcodetask;
+    xTaskCreate(barcodeLaunch,
+                "barcodeThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &barcodetask);
 
-    motor_main();
+    
 
-    // TaskHandle_t detectLinesTask;
-    // xTaskCreate(detectLines,
-    //             "detectLinesThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &detectLinesTask);
+    TaskHandle_t detectLinesTask;
+    xTaskCreate(detectLines,
+                "detectLinesThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &detectLinesTask);
+
 
     TaskHandle_t encoderTask;
     xTaskCreate(encoder_main,
@@ -245,10 +245,20 @@ void vLaunch(void)
                 tskIDLE_PRIORITY,
                 &encoderTask);
 
+    TaskHandle_t ultrasonicTask;
+    xTaskCreate(ultrasonic_main,
+                "ultrasonicThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &ultrasonicTask);
+
+    motor_main();
+    
     // magnetometer_main(); // Run mag
 
     // Start all queue tasks
-    // start_recv_msg_task();
+    start_recv_msg_task();
 
     vTaskStartScheduler();
 }

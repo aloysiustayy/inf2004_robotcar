@@ -92,6 +92,7 @@ static char *Z_ARRAY_MAP = "302121313";
 
 // '*' in Code 39 format
 static char *ASTERISK_ARRAY_MAP = "303121213";
+// static char *BACK_ASTERISK_ARRAY_MAP = "312121303";
 
 static uint32_t res     = 0;
 static uint16_t prevAvg = 0;
@@ -120,6 +121,27 @@ static struct barcode barcodes[BARCODE_BUF_SIZE];
 
 // queue for barcode read of length 3
 static char barcodeRead[3];
+
+char* reverseString(const char *str) {
+    int length = strlen(str);
+    char *reversed = (char *)malloc((length + 1) * sizeof(char)); // +1 for the null terminator
+
+    if (reversed == NULL) {
+        // Handle memory allocation failure
+        fprintf(stderr, "Memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i, j;
+    for (i = length - 1, j = 0; i >= 0; i--, j++) {
+        reversed[j] = str[i];
+    }
+
+    reversed[length] = '\0'; // Add null terminator at the end
+
+    return reversed;
+}
+
 
 static void
 clearBarcodeRead()
@@ -246,6 +268,7 @@ compareTwoArray()
     }
 
     char *string = intArrayToString(barsRead, BARCODE_ARR_SIZE);
+    
 
     free(barsRead);
 
@@ -264,7 +287,15 @@ compareTwoArray()
 
     for (int i = 0; i < 27; i++)
     {
+        // left to right
         if (strncmp(barcodes[i], string, BARCODE_ARR_SIZE) == 0)
+        {
+            free(string);
+            resetBarcodes();
+            return characters[i];
+        }
+        // right to left
+        if (strncmp(reverseString(barcodes[i]), string, BARCODE_ARR_SIZE) == 0)
         {
             free(string);
             resetBarcodes();

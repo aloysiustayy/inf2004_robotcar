@@ -2,12 +2,20 @@
 #include <stdio.h>
 #include "ultrasonic.h"
 #include "hardware/uart.h"
+#include "hardware/gpio.h"
+#include "motor.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "message_buffer.h"
+#include "queue.h"
 
 // For moving average
 #define NUM_SAMPLES 4
 
 uint trigPin = 6;
 uint echoPin = 7;
+
+static QueueHandle_t ultrasonic_queue_handle;
 
 bool obstacleDetected;
 void echoPinInterrupt(uint gpio, uint32_t events);
@@ -18,6 +26,32 @@ double P_last = 1;
 double Q = 0.022; // Process noise covariance
 double R = 0.617; // Measurement noise covariance
 
+/*!
+ * @brief Sends a message to the queue ("Text = Data\\n")
+ * @param[in] type	Text
+ * @param[in] data Data to print out
+ * @return -
+ */
+void
+send_ultrasonic_data(char *type, uint32_t data)
+{
+
+    char printf_message[100]; // Adjust the buffer size as needed
+    snprintf(printf_message, sizeof(printf_message), "%s=%d", type, data);
+
+    xQueueSend(ultrasonic_queue_handle, &printf_message, 0);
+}
+
+QueueHandle_t
+UltrasonicMessageHandler()
+{
+    if (ultrasonic_queue_handle == NULL)
+    {
+        ultrasonic_queue_handle = xQueueCreate(5, sizeof(char) * 100);
+    }
+
+    return ultrasonic_queue_handle;
+}
 // Kalman filter function
 double kalmanFilter(double z_measured) {
     // Prediction
@@ -57,9 +91,8 @@ uint16_t calculateMovingAverage(uint16_t newReading, uint16_t readings[], int* i
     return movingAverage;
 }
 
-int main()
+void ultrasonic_main(__unused void *params)
 {
-    stdio_init_all();
     setupUltrasonicPins(trigPin, echoPin);
 
     uint16_t readings[NUM_SAMPLES] = {0};
@@ -87,11 +120,12 @@ int main()
         // Check if obstacle detected
         if (movingAverageDist > 0 && movingAverageDist < 8) {
             obstacleDetected = true;
-            printf("Obstacle detected\n");
+            send_ultrasonic_data("U-turn", 180);
+            // printf("Obstacle detected\n");
         }
         // printf("\n %d cm", getCm(trigPin, echoPin)); 
 
         // Delay between each reading
-        sleep_ms(100);
+        vTaskDelay(100);
     }
 }

@@ -140,6 +140,7 @@ void turn_right(uint8_t degree)
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
     printf("Moving straight now\n");
 }
+
 void turn_left(uint8_t degree)
 {
     // printf("Notch for right should be more than left\n");
@@ -165,6 +166,37 @@ void turn_left(uint8_t degree)
     }
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_A, normal_speed);
+    printf("Moving straight now\n");
+}
+
+void u_turn() 
+{
+    // printf("Notch for left should be more than right\n");
+    printf("U-turning now!!");
+
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
+    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
+
+    gpio_put(RIGHT_WHEEL_PIN1, 1);
+    gpio_put(RIGHT_WHEEL_PIN2, 0);
+
+    // Reset LEFT notch because to turn right, left wheel encoder's notch
+    // should be 0 to calculate how many notch it has travelled
+    reset_notch(LEFT);
+
+    // This var will contain the notch count needed to turn by 'degree'
+    uint8_t notch_threshold = degree_to_notch(180);
+
+    while (true)
+    {
+        if (get_notch(LEFT) > notch_threshold)
+        {
+            break;
+        }
+    }
+
+    gpio_put(RIGHT_WHEEL_PIN1, 0);
+    gpio_put(RIGHT_WHEEL_PIN2, 1);
     printf("Moving straight now\n");
 }
 
@@ -250,6 +282,7 @@ void react_to_commands(__unused void *params)
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
+        
         pid_speed_left();
         pid_speed_right();
         // If command is "left=90"
@@ -259,6 +292,19 @@ void react_to_commands(__unused void *params)
             printf("Turning left now...");
             turn_left(90);
             // Reset motor_command
+            snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else if (strcmp(motor_command, "right=90") == 0)
+        {
+            printf("Turning right now...");
+            turn_right(90);
+            // Reset motor_command
+            snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else if (strcmp(motor_command, "U-turn=180") == 0)
+        {
+            printf("Too near to obstacles... Reversing now...");
+            u_turn();
             snprintf(motor_command, sizeof(motor_command), "%s", "");
         }
     }

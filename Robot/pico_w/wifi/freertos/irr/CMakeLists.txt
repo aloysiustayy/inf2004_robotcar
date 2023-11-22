@@ -24,6 +24,7 @@
         cgi.h
         global_defined.h
         obstacle.c
+        obstacle.h
         )
     
     # target_compile_definitions(irr_sensor_sys PRIVATE

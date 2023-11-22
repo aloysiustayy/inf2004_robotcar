@@ -8,8 +8,10 @@
 #include "queue.h"
 
 #define NUM_OF_PINS      2
+#define LEFT_VCC_PIN 14
 #define LEFT_ANALOG_PIN  15
 #define RIGHT_ANALOG_PIN 16
+#define RIGHT_VCC_PIN 17
 #define BLACK            1
 #define WHITE            0
 static char event_str[128];
@@ -26,10 +28,9 @@ uint8_t              prev_sensor[] = { WHITE, WHITE };
 void gpio_event_stringg(char *buf, uint32_t events);
 
 void
-start_timer(int pin)
+set_black(int pin)
 {
-    // for (int i = NUM_OF_PINS - 1; i > -1; i--)
-    for (int i = 0; i < NUM_OF_PINS; i++)
+    for (int i = NUM_OF_PINS - 1; i > -1; i--)
     {
         if (pin == analog_pins[i])
         {
@@ -39,10 +40,9 @@ start_timer(int pin)
 }
 
 void
-stop_timer(int pin)
+set_white(int pin)
 {
-    // for (int i = NUM_OF_PINS - 1; i > -1; i--)
-    for (int i = 0; i < NUM_OF_PINS; i++)
+    for (int i = NUM_OF_PINS - 1; i > -1; i--)
     {
         if (pin == analog_pins[i])
         {
@@ -124,9 +124,13 @@ void
 detectLines(__unused void *params)
 {
 
-    // gpio_init(14);
-    // gpio_set_dir(14, GPIO_OUT);
-    // gpio_put(14, 1);
+    gpio_init(LEFT_VCC_PIN);
+    gpio_set_dir(LEFT_VCC_PIN, GPIO_OUT);
+    gpio_put(LEFT_VCC_PIN, 1);
+
+    gpio_init(RIGHT_VCC_PIN);
+    gpio_set_dir(RIGHT_VCC_PIN, GPIO_OUT);
+    gpio_put(RIGHT_VCC_PIN, 1);
 
     if (ir_queue_handle == NULL)
     {
@@ -146,57 +150,52 @@ detectLines(__unused void *params)
 
     while (true)
     {
-        // printf("why why why wyh why\n");
-        // for (int i = NUM_OF_PINS - 1; i > -1; i--)
-        for (int i = 0; i < NUM_OF_PINS; i++)
+        
+        for (int i = NUM_OF_PINS-1; i > -1; i--)
         {
-            // if (stop_signal[i] == 0)
-            // {
-            //     start_timer(analog_pins[i]);
-            // }
-            // else
-            // {
-            //     stop_timer(analog_pins[i]);
-            // }
-            // if (i == 0)
-            // printf("GPIO get %d\n", gpio_get(analog_pins[i]));
             if (gpio_get(analog_pins[i]) == 1)
             {
-                start_timer(analog_pins[i]);
+                set_black(analog_pins[i]);
             }
             else
             {
-                stop_timer(analog_pins[i]);
+                set_white(analog_pins[i]);
             }
-            // if (i == 0)
-            // {
-            // printf("sensor[i] = %d     prev_sensor[i] = %d\n",
-            //    sensor[i],
-            //    prev_sensor[i]);
-            // }
+           
             if (sensor[i] != prev_sensor[i])
             {
                 char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
-
-                if (analog_pins[i] == LEFT_ANALOG_PIN)
+                
+                if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
                 {
-                    printf("Left IR Sensor detected: %s\n", line_colour);
-                    if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                    {
-                        printf("Turning left right now");
-                        // turn_left(90);
+                    printf("Turning right now");
+                    
+                    if(analog_pins[i] == LEFT_ANALOG_PIN){
                         send_sensor_data("left", 90);
                     }
+                    else if(analog_pins[i] == RIGHT_ANALOG_PIN){
+                        send_sensor_data("right", 90);
+                    }
                 }
-                else if (analog_pins[i] == RIGHT_ANALOG_PIN)
-                {
-                    // printf("Right IR Sensor detected: %s\n", line_colour);
+                // if (analog_pins[i] == LEFT_ANALOG_PIN)
+                // {
+                //     printf("Left IR Sensor detected: %s\n", line_colour);
                     // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
                     // {
-                    //     printf("Turning right right now");
-
+                    //     printf("Turning left right now");
+                    //     // turn_left(90);
+                    //     send_sensor_data("left", 90);
                     // }
-                }
+                // }
+                // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
+                // {
+                //     // printf("Right IR Sensor detected: %s\n", line_colour);
+                //     // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+                //     // {
+                //     //     printf("Turning right right now");
+
+                //     // }
+                // }
 
                 prev_sensor[i] = sensor[i];
             }
