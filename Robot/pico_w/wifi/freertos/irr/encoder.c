@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #include "encoder.h"
 
 #define LEFT_VCC_PIN 13
@@ -15,6 +17,7 @@ static char           event_str[128];
 static const uint32_t encoder_pins[]        = { 2, 3 };
 static const float    wheel_circumference[] = { 2.6, 2.6 };
 static uint32_t       notch_count[]         = { 0, 0 };
+static float          speed_count[]         = { 0.0, 0.0 };
 static uint32_t       pulse_start_time[]    = { 0, 0 };
 static float          distance[]            = { 0.0, 0.0 };
 
@@ -29,20 +32,29 @@ reset_notch(uint side)
 uint32_t
 get_notch(uint side)
 {
-
     if (side >= 0 && side < NUM_OF_PINS)
     {
         return notch_count[side];
     }
     return -1;
 }
+
+float
+get_speed(uint side)
+{
+    if (side >= 0 && side < NUM_OF_PINS)
+    {
+        return speed_count[side];
+    }
+    return -1;
+}
+
 void gpio_event_string(char *buf, uint32_t events);
 
 void
 gpio_callback(uint gpio, uint32_t events)
 {
     int encoder_index = -1; // Initialize to an invalid index
-
     for (int i = 0; i < 2; i++)
     {
         if (gpio == encoder_pins[i])
@@ -74,8 +86,9 @@ gpio_callback(uint gpio, uint32_t events)
         // Calculate pulse width in microseconds
         uint32_t pulse_width = pulse_end_time - pulse_start_time[encoder_index];
         // Calculate speed in centimeters per second
-        float speed_cps
-            = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
+        // float speed_cps = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
+        speed_count[encoder_index] = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
+        // printf("Encoder #%d, speed: %f\n", encoder_index, speed_count[encoder_index]);
         // Update the distance traveled
         distance[encoder_index] += wheel_circumference[encoder_index];
         // printf(
@@ -91,7 +104,7 @@ gpio_callback(uint gpio, uint32_t events)
 }
 
 void
-encoder_main(__unused void *params)
+encoder_main()
 {
     // stdio_init_all();
 
@@ -113,7 +126,9 @@ encoder_main(__unused void *params)
 
     // Wait forever
     while (1)
-        ;
+    {
+        vTaskDelay(100);
+    }
 }
 
 static const char *gpio_irq_str[] = {

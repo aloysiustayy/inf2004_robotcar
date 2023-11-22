@@ -227,7 +227,8 @@ void vLaunch(void)
     //             tskIDLE_PRIORITY,
     //             &barcodetask);
 
-    // motor_main();
+    motor_main();
+
     // TaskHandle_t detectLinesTask;
     // xTaskCreate(detectLines,
     //             "detectLinesThread",
@@ -236,7 +237,15 @@ void vLaunch(void)
     //             tskIDLE_PRIORITY,
     //             &detectLinesTask);
 
-    magnetometer_main(); // Run mag
+    TaskHandle_t encoderTask;
+    xTaskCreate(encoder_main,
+                "encoderThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &encoderTask);
+
+    // magnetometer_main(); // Run mag
 
     // Start all queue tasks
     // start_recv_msg_task();

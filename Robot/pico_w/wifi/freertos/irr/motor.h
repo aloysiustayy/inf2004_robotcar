@@ -21,5 +21,9 @@ void turn_left(uint8_t degree);
 void set_motor_command(char *data);
 void pwm_control();
 void motor_main();
+void pid_speed_left();
+void pid_speed_right();
+float compute_pid(float setpoint, float current_value, float *integral, float *prev_error);
+uint32_t degree_to_notch(uint8_t degree);
 
 #endif // MOTOR_H
