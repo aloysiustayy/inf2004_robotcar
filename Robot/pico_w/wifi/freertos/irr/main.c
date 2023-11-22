@@ -202,30 +202,30 @@ void main_task(__unused void *params)
 
 void vLaunch(void)
 {
-    TaskHandle_t task;
-    xTaskCreate(main_task,
-                "webserverThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &task);
+    // TaskHandle_t task;
+    // xTaskCreate(main_task,
+    //             "webserverThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &task);
 
-    TaskHandle_t barcodetask;
-    xTaskCreate(barcodeLaunch,
-                "barcodeThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &barcodetask);
+    // TaskHandle_t barcodetask;
+    // xTaskCreate(barcodeLaunch,
+    //             "barcodeThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &barcodetask);
 
     motor_main();
-    TaskHandle_t detectLinesTask;
-    xTaskCreate(detectLines,
-                "detectLinesThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &detectLinesTask);
+    // TaskHandle_t detectLinesTask;
+    // xTaskCreate(detectLines,
+    //             "detectLinesThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &detectLinesTask);
 
     TaskHandle_t encoderTask;
     xTaskCreate(encoder_main,
@@ -235,7 +235,7 @@ void vLaunch(void)
                 tskIDLE_PRIORITY,
                 &encoderTask);
 
-    magnetometer_main(); // Run mag
+    // magnetometer_main(); // Run mag
 
     // Start all queue tasks
     start_recv_msg_task();

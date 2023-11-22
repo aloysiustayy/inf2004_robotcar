@@ -88,7 +88,7 @@ gpio_callback(uint gpio, uint32_t events)
         // Calculate speed in centimeters per second
         // float speed_cps = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
         speed_count[encoder_index] = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
-        printf("Encoder #%d, speed: %f\n", encoder_index, speed_count[encoder_index]);
+        // printf("Encoder #%d, speed: %f\n", encoder_index, speed_count[encoder_index]);
         // Update the distance traveled
         distance[encoder_index] += wheel_circumference[encoder_index];
         // printf(

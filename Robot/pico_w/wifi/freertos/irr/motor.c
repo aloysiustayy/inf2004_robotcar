@@ -38,9 +38,13 @@ uint16_t normal_speed;
 char motor_command[100]; // receive from task_recv_msg_task
 
 //Define PID controller constants
-float Kp = 1.0;   //Proportional gain
-float Ki = 0.1;   //Integral gain
-float Kd = 0.01;  //Derivative gain
+float Kp = 0.5;   //Proportional gain
+float Ki = 0.2;   //Integral gain
+float Kd = 0.02;  //Derivative gain
+
+// Define target speed
+float target_speed = 100.0;
+float proportional_factor  = 221.43;
 
 //Function to compute control signal using PID control
 float compute_pid(float setpoint, float current_value, float *integral, float *prev_error) {
@@ -83,19 +87,19 @@ void motor_init()
 void move_forward()
 {
     // Set the pins to high and low
-    gpio_put(LEFT_WHEEL_PIN1, 1);
-    gpio_put(LEFT_WHEEL_PIN2, 0);
-    gpio_put(RIGHT_WHEEL_PIN1, 1);
-    gpio_put(RIGHT_WHEEL_PIN2, 0);
+    gpio_put(LEFT_WHEEL_PIN1, 0);
+    gpio_put(LEFT_WHEEL_PIN2, 1);
+    gpio_put(RIGHT_WHEEL_PIN1, 0);
+    gpio_put(RIGHT_WHEEL_PIN2, 1);
 }
 
 void move_backward()
 {
     // Set the pins to high and low
-    gpio_put(LEFT_WHEEL_PIN1, 0);
-    gpio_put(LEFT_WHEEL_PIN2, 1);
-    gpio_put(RIGHT_WHEEL_PIN1, 0);
-    gpio_put(RIGHT_WHEEL_PIN2, 1);
+    gpio_put(LEFT_WHEEL_PIN1, 1);
+    gpio_put(LEFT_WHEEL_PIN2, 0);
+    gpio_put(RIGHT_WHEEL_PIN1, 1);
+    gpio_put(RIGHT_WHEEL_PIN2, 0);
 }
 
 void move_stop()
@@ -164,26 +168,36 @@ void turn_left(uint8_t degree)
     printf("Moving straight now\n");
 }
 
-float pid_speed_left()
+void pid_speed_left()
 {
     float integral = 0.0;  //Integral term for PID control
     float prev_error = 0.0;  //Previous error for PID control
     float current_speed = get_speed(LEFT);
-    float control_pwm_signal = compute_pid(100, current_speed, &integral, &prev_error);
+    float pid_value_left = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
-    printf("current speed: %f, current_pid_signal value: %f\n", current_speed, control_pwm_signal);
-    return control_pwm_signal;
+    float new_duty_cycle = normal_speed + (pid_value_left * proportional_factor);
+
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, new_duty_cycle);
+
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, control_pwm_signal);
+
+    printf("current speed left: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_left, new_duty_cycle);
+    // return pid_value;
 }
 
-float pid_speed_right()
+void pid_speed_right()
 {
     float integral = 0.0;  //Integral term for PID control
     float prev_error = 0.0;  //Previous error for PID control
     float current_speed = get_speed(RIGHT);
-    float control_pwm_signal = compute_pid(100, current_speed, &integral, &prev_error);
+    float pid_value_right = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
-    printf("current speed: %f, current_pid_signal value: %f\n", current_speed, control_pwm_signal);
-    return control_pwm_signal;
+    float new_duty_cycle = normal_speed + (pid_value_right * proportional_factor);
+
+    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, new_duty_cycle);
+
+    printf("current speed right: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_right, new_duty_cycle);
+    // return control_pwm_signal;
 }
 
 void pwm_control()
@@ -236,7 +250,8 @@ void react_to_commands(__unused void *params)
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
-
+        pid_speed_left();
+        pid_speed_right();
         // If command is "left=90"
         if (strcmp(motor_command, "left=90") == 0)
         {
