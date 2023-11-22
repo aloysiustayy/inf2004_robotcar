@@ -6,6 +6,8 @@
 #include "task.h"
 #include "message_buffer.h"
 #include "queue.h"
+#include <time.h>
+
 
 #define NUM_OF_PINS 2
 #define LEFT_VCC_PIN 14
@@ -26,6 +28,16 @@ uint8_t sensor[] = {WHITE, WHITE};
 uint8_t prev_sensor[] = {WHITE, WHITE};
 
 void gpio_event_stringg(char *buf, uint32_t events);
+
+
+#define DEBOUNCE_DELAY_MS 50 // Debouncing for IR sensor
+uint32_t last_btn_press = 0;
+// Clock Set Up for debouncing
+
+clock_t clock()
+{
+    return (clock_t) time_us_64() / 10000;
+}
 
 void set_black(int pin)
 {
@@ -90,6 +102,7 @@ void send_sensor_data(char *type, uint32_t data)
 
 void gpio_callback_ir(uint gpio, uint32_t events)
 {
+    uint32_t curr_time = (uint32_t) clock();
 
     // Put the GPIO event(s) that just happened into event_str
     // so we can print it
@@ -100,6 +113,11 @@ void gpio_callback_ir(uint gpio, uint32_t events)
     {
         // if (i == 0)
         //     printf("GPIOOOO is %d analog pin is %d\n", gpio, analog_pins[i]);
+
+        if (curr_time - last_btn_press >= DEBOUNCE_DELAY_MS) {
+            // do things here
+            // idk how to differentiate the different IRs
+        }
 
         if (gpio == analog_pins[i])
         {
@@ -114,6 +132,9 @@ void gpio_callback_ir(uint gpio, uint32_t events)
             }
         }
     }
+
+    // Update time of the last button press
+    last_btn_press = curr_time;
 }
 
 void detectLines(__unused void *params)
