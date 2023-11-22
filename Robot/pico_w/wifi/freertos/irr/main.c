@@ -29,13 +29,13 @@
 #define TEST_TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 #define mbaTASK_MESSAGE_BUFFER_SIZE (60)
 
-#define WIFI_SSID "TAY"
-#define WIFI_PASSWORD "88318831"
-// #define IP_ADDRESS    "172.20.10.10"
-#define IP_ADDRESS "192.168.1.20"
+#define WIFI_SSID "hargaowithchili"
+#define WIFI_PASSWORD "athmqwer"
+#define IP_ADDRESS "172.20.10.10"
+// #define IP_ADDRESS "192.168.1.20"
 #define NETMASK "255.255.255.0"
-// #define GATEWAY "172.20.10.1"
-#define GATEWAY "192.168.1.254"
+#define GATEWAY "172.20.10.1"
+// #define GATEWAY "192.168.1.254"
 
 QueueHandle_t ir_queue_handle;
 QueueHandle_t barcode_queue_handle;
@@ -219,27 +219,27 @@ void vLaunch(void)
                 tskIDLE_PRIORITY + 1UL,
                 &task);
 
-    TaskHandle_t barcodetask;
-    xTaskCreate(barcodeLaunch,
-                "barcodeThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &barcodetask);
+    // TaskHandle_t barcodetask;
+    // xTaskCreate(barcodeLaunch,
+    //             "barcodeThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &barcodetask);
 
-    motor_main();
-    TaskHandle_t detectLinesTask;
-    xTaskCreate(detectLines,
-                "detectLinesThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &detectLinesTask);
+    // motor_main();
+    // TaskHandle_t detectLinesTask;
+    // xTaskCreate(detectLines,
+    //             "detectLinesThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &detectLinesTask);
 
     magnetometer_main(); // Run mag
 
     // Start all queue tasks
-    start_recv_msg_task();
+    // start_recv_msg_task();
 
     vTaskStartScheduler();
 }
@@ -248,7 +248,7 @@ int main(void)
 {
     stdio_init_all();
     adc_init();
-    init_i2c();
+    // init_i2c();
 
     vLaunch();
     /* Configure the hardware ready to run the demo. */
