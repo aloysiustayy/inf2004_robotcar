@@ -12,17 +12,18 @@
 #include "encoder.h"
 
 #define LEFT_VCC_PIN 13
-#define NUM_OF_PINS  2
-static char           event_str[128];
-static const uint32_t encoder_pins[]        = { 2, 3 };
-static const float    wheel_circumference[] = { 2.6, 2.6 };
-static uint32_t       notch_count[]         = { 0, 0 };
-static float          speed_count[]         = { 0.0, 0.0 };
-static uint32_t       pulse_start_time[]    = { 0, 0 };
-static float          distance[]            = { 0.0, 0.0 };
+#define RIGHT_VCC_PIN 18
 
-void
-reset_notch(uint side)
+#define NUM_OF_PINS 2
+static char event_str[128];
+static const uint32_t encoder_pins[] = {2, 3};
+static const float wheel_circumference[] = {2.6, 2.6};
+static uint32_t notch_count[] = {0, 0};
+static float speed_count[] = {0.0, 0.0};
+static uint32_t pulse_start_time[] = {0, 0};
+static float distance[] = {0.0, 0.0};
+
+void reset_notch(uint side)
 {
     if (side >= 0 && side < NUM_OF_PINS)
     {
@@ -39,8 +40,7 @@ get_notch(uint side)
     return -1;
 }
 
-float
-get_speed(uint side)
+float get_speed(uint side)
 {
     if (side >= 0 && side < NUM_OF_PINS)
     {
@@ -51,8 +51,7 @@ get_speed(uint side)
 
 void gpio_event_string(char *buf, uint32_t events);
 
-void
-gpio_callback(uint gpio, uint32_t events)
+void gpio_callback(uint gpio, uint32_t events)
 {
     int encoder_index = -1; // Initialize to an invalid index
     for (int i = 0; i < 2; i++)
@@ -88,42 +87,46 @@ gpio_callback(uint gpio, uint32_t events)
         // Calculate speed in centimeters per second
         // float speed_cps = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
         speed_count[encoder_index] = wheel_circumference[encoder_index] / (pulse_width / 1000000.0);
+
         // printf("Encoder #%d, speed: %f\n", encoder_index, speed_count[encoder_index]);
+
         // Update the distance traveled
         distance[encoder_index] += wheel_circumference[encoder_index];
+
         // printf(
         //     "Encoder %d - Notch Count: %d, Distance: %.2f cm, Speed: %.2f "
         //     "cm/s\n",
         //     encoder_index + 1,
         //     notch_count[encoder_index],
         //     distance[encoder_index],
-        //     speed_cps);
+        //     speed_count[encoder_index]);
     }
 
     pulse_start_time[encoder_index] = time_us_32();
 }
 
-void
-encoder_main()
+void encoder_main(__unused void *params)
 {
     // stdio_init_all();
-
+    printf("Starting main encoder");
     // Supply power
     gpio_init(LEFT_VCC_PIN);
     gpio_set_dir(LEFT_VCC_PIN, GPIO_OUT);
     gpio_put(LEFT_VCC_PIN, 1);
-
+    gpio_init(RIGHT_VCC_PIN);
+    gpio_set_dir(RIGHT_VCC_PIN, GPIO_OUT);
+    gpio_put(RIGHT_VCC_PIN, 1);
+    printf("encoder main");
     // printf("Wheel Encoder\n");
     for (int i = 0; i < 2; i++)
     {
         // Set up interrupts and callbacks for both wheel encoders
         gpio_set_irq_enabled_with_callback(encoder_pins[i],
-                                           GPIO_IRQ_EDGE_RISE
-                                               | GPIO_IRQ_EDGE_FALL,
+                                           GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
                                            true,
                                            &gpio_callback);
     }
-
+    printf("SUCCESS main encoder");
     // Wait forever
     while (1)
     {
@@ -138,8 +141,7 @@ static const char *gpio_irq_str[] = {
     "EDGE_RISE"   // 0x8
 };
 
-void
-gpio_event_string(char *buf, uint32_t events)
+void gpio_event_string(char *buf, uint32_t events)
 {
     for (uint i = 0; i < 4; i++)
     {

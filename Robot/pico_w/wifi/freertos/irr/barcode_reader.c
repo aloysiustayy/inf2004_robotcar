@@ -31,7 +31,7 @@
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
 
-#define ADC_PIN     26
+#define ADC_PIN 26
 #define DIGITAL_PIN 22
 
 #define BLACK_THRESHOLD 3000
@@ -47,9 +47,9 @@
 #define SAMPLE_SIZE 10000
 
 // Read only 3 barcodes
-uint8_t firstBarcode  = 0;
+uint8_t firstBarcode = 0;
 uint8_t secondBarcode = 0;
-uint8_t thirdBarcode  = 0;
+uint8_t thirdBarcode = 0;
 
 static QueueHandle_t barcode_queue_handle;
 
@@ -94,10 +94,10 @@ static char *Z_ARRAY_MAP = "302121313";
 static char *ASTERISK_ARRAY_MAP = "303121213";
 // static char *BACK_ASTERISK_ARRAY_MAP = "312121303";
 
-static uint32_t res     = 0;
+static uint32_t res = 0;
 static uint16_t prevAvg = 0;
 
-static int i                 = 0;
+static int i = 0;
 static int barcode_arr_index = 1;
 
 char *outputBuffer;
@@ -110,10 +110,10 @@ struct barcode
     uint16_t analog_value;
     // 0 - white
     // 1 - black
-    int             blackWhite;
+    int blackWhite;
     absolute_time_t blockStart;
-    int64_t         blockLength;
-    enum bar        type;
+    int64_t blockLength;
+    enum bar type;
 } barcode;
 
 // queue for barcodes of length 9
@@ -122,18 +122,21 @@ static struct barcode barcodes[BARCODE_BUF_SIZE];
 // queue for barcode read of length 3
 static char barcodeRead[3];
 
-char* reverseString(const char *str) {
+char *reverseString(const char *str)
+{
     int length = strlen(str);
     char *reversed = (char *)malloc((length + 1) * sizeof(char)); // +1 for the null terminator
 
-    if (reversed == NULL) {
+    if (reversed == NULL)
+    {
         // Handle memory allocation failure
         fprintf(stderr, "Memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
 
     int i, j;
-    for (i = length - 1, j = 0; i >= 0; i--, j++) {
+    for (i = length - 1, j = 0; i >= 0; i--, j++)
+    {
         reversed[j] = str[i];
     }
 
@@ -141,7 +144,6 @@ char* reverseString(const char *str) {
 
     return reversed;
 }
-
 
 static void
 clearBarcodeRead()
@@ -240,16 +242,16 @@ static void
 resetBarcodes()
 {
     barcode_arr_index = 1;
-    blockStart        = get_absolute_time();
+    blockStart = get_absolute_time();
 
     struct barcode lastReading = barcodes[BARCODE_BUF_SIZE - 1];
 
     for (int i = 0; i < BARCODE_BUF_SIZE; i++)
     {
         barcodes[i].analog_value = 0;
-        barcodes[i].blackWhite   = -1;
-        barcodes[i].blockLength  = 0;
-        barcodes[i].type         = 0;
+        barcodes[i].blackWhite = -1;
+        barcodes[i].blockLength = 0;
+        barcodes[i].type = 0;
     }
 
     barcodes[0] = lastReading;
@@ -268,22 +270,20 @@ compareTwoArray()
     }
 
     char *string = intArrayToString(barsRead, BARCODE_ARR_SIZE);
-    
 
     free(barsRead);
 
-    char *barcodes[]
-        = { A_ARRAY_MAP, B_ARRAY_MAP, C_ARRAY_MAP,       D_ARRAY_MAP,
-            E_ARRAY_MAP, F_ARRAY_MAP, G_ARRAY_MAP,       H_ARRAY_MAP,
-            I_ARRAY_MAP, J_ARRAY_MAP, K_ARRAY_MAP,       L_ARRAY_MAP,
-            M_ARRAY_MAP, N_ARRAY_MAP, O_ARRAY_MAP,       P_ARRAY_MAP,
-            Q_ARRAY_MAP, R_ARRAY_MAP, S_ARRAY_MAP,       T_ARRAY_MAP,
-            U_ARRAY_MAP, V_ARRAY_MAP, W_ARRAY_MAP,       X_ARRAY_MAP,
-            Y_ARRAY_MAP, Z_ARRAY_MAP, ASTERISK_ARRAY_MAP };
+    char *barcodes[] = {A_ARRAY_MAP, B_ARRAY_MAP, C_ARRAY_MAP, D_ARRAY_MAP,
+                        E_ARRAY_MAP, F_ARRAY_MAP, G_ARRAY_MAP, H_ARRAY_MAP,
+                        I_ARRAY_MAP, J_ARRAY_MAP, K_ARRAY_MAP, L_ARRAY_MAP,
+                        M_ARRAY_MAP, N_ARRAY_MAP, O_ARRAY_MAP, P_ARRAY_MAP,
+                        Q_ARRAY_MAP, R_ARRAY_MAP, S_ARRAY_MAP, T_ARRAY_MAP,
+                        U_ARRAY_MAP, V_ARRAY_MAP, W_ARRAY_MAP, X_ARRAY_MAP,
+                        Y_ARRAY_MAP, Z_ARRAY_MAP, ASTERISK_ARRAY_MAP};
 
-    char characters[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-                          'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                          'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '*' };
+    char characters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+                         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '*'};
 
     for (int i = 0; i < 27; i++)
     {
@@ -366,7 +366,7 @@ ADC_IRQ_FIFO_HANDLER()
                     avg = prevAvg;
                 }
             }
-            i   = 0;
+            i = 0;
             res = 0;
             // printf("Avg is %d\n", avg);
             struct barcode barcode;
@@ -388,16 +388,14 @@ ADC_IRQ_FIFO_HANDLER()
             // array.
             if (barcode_arr_index == BARCODE_BUF_SIZE)
             {
-                if (barcodes[BARCODE_BUF_SIZE - 1].blackWhite
-                    != barcode.blackWhite)
+                if (barcodes[BARCODE_BUF_SIZE - 1].blackWhite != barcode.blackWhite)
                 {
-                    blockEnd           = get_absolute_time();
+                    blockEnd = get_absolute_time();
                     barcode.blockStart = blockEnd;
 
                     int64_t blockLength = absolute_time_diff_us(
                         barcodes[BARCODE_BUF_SIZE - 1].blockStart, blockEnd);
-                    barcodes[BARCODE_BUF_SIZE - 1].blockLength
-                        = blockLength / 10000;
+                    barcodes[BARCODE_BUF_SIZE - 1].blockLength = blockLength / 10000;
                     addBarcode(barcode);
                 }
             }
@@ -407,16 +405,14 @@ ADC_IRQ_FIFO_HANDLER()
                 // different from the black/white flag of the previous barcode.
                 // If it is, then calculate the block length and add the barcode
                 // to the barcode array.
-                if (barcodes[barcode_arr_index - 1].blackWhite
-                    != barcode.blackWhite)
+                if (barcodes[barcode_arr_index - 1].blackWhite != barcode.blackWhite)
                 {
-                    blockEnd           = get_absolute_time();
+                    blockEnd = get_absolute_time();
                     barcode.blockStart = blockEnd;
 
                     if (barcode_arr_index == 0)
                     {
-                        int64_t blockLength
-                            = absolute_time_diff_us(blockStart, blockEnd);
+                        int64_t blockLength = absolute_time_diff_us(blockStart, blockEnd);
 
                         // Convert microseconds to milliseconds, which is used
                         // as length in this case
@@ -428,8 +424,7 @@ ADC_IRQ_FIFO_HANDLER()
                             barcodes[barcode_arr_index - 1].blockStart,
                             blockEnd);
 
-                        barcodes[barcode_arr_index - 1].blockLength
-                            = blockLength / 10000;
+                        barcodes[barcode_arr_index - 1].blockLength = blockLength / 10000;
                     }
 
                     barcodes[barcode_arr_index] = barcode;
@@ -443,8 +438,7 @@ ADC_IRQ_FIFO_HANDLER()
     irq_clear(ADC_IRQ_FIFO);
 }
 
-void
-temp_detect(__unused void *params)
+void temp_detect(__unused void *params)
 {
     while (true)
     {
@@ -452,18 +446,18 @@ temp_detect(__unused void *params)
         if (isValidBarcode())
         {
             printf("Valid Barcode\n\r");
-            firstBarcode  = barcodeRead[0];
+            firstBarcode = barcodeRead[0];
             secondBarcode = barcodeRead[1];
-            thirdBarcode  = barcodeRead[2];
+            thirdBarcode = barcodeRead[2];
             printf("Barcode: %c%c%c\n\r",
                    firstBarcode,
                    secondBarcode,
                    thirdBarcode);
             // sendBarcodeVal(); To send barcode values to comms
             clearBarcodeRead();
-            firstBarcode  = 0;
+            firstBarcode = 0;
             secondBarcode = 0;
-            thirdBarcode  = 0;
+            thirdBarcode = 0;
         }
         vTaskDelay(100);
         // printf("running barcode task");
@@ -487,8 +481,7 @@ BarcodeMessageHandler()
  * @param[in] data Data to print out
  * @return -
  */
-void
-send_barcode_data()
+void send_barcode_data()
 {
 
     char printf_message[100]; // Adjust the buffer size as needed
@@ -502,12 +495,11 @@ send_barcode_data()
     xQueueSend(barcode_queue_handle, &printf_message, 0);
 }
 
-void
-barcodeLaunch(__unused void *params)
+void barcodeLaunch(__unused void *params)
 {
-    gpio_init(14);
-    gpio_set_dir(14, GPIO_OUT);
-    gpio_put(14, 1);
+    gpio_init(19);
+    gpio_set_dir(19, GPIO_OUT);
+    gpio_put(19, 1);
 
     // adc_init();
 
@@ -546,9 +538,9 @@ barcodeLaunch(__unused void *params)
         if (isValidBarcode())
         {
             printf("Valid Barcode\n\r");
-            firstBarcode  = barcodeRead[0];
+            firstBarcode = barcodeRead[0];
             secondBarcode = barcodeRead[1];
-            thirdBarcode  = barcodeRead[2];
+            thirdBarcode = barcodeRead[2];
 
             printf("Barcode: %c%c%c\n\r",
                    firstBarcode,
@@ -557,9 +549,9 @@ barcodeLaunch(__unused void *params)
 
             send_barcode_data();
             clearBarcodeRead();
-            firstBarcode  = 0;
+            firstBarcode = 0;
             secondBarcode = 0;
-            thirdBarcode  = 0;
+            thirdBarcode = 0;
         }
 
         // printf("running barcode task");

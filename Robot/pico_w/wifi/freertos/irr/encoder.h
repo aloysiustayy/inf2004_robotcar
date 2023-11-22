@@ -15,11 +15,11 @@
     }
 
 // Function declarations
-void     reset_notch(uint side);
+void reset_notch(uint side);
 uint32_t get_notch(uint side);
 float get_speed(uint side);
-void     encoder_main();
-void     gpio_callback(uint gpio, uint32_t events);
-void     gpio_event_string(char *buf, uint32_t events);
+void gpio_callback(uint gpio, uint32_t events);
+void gpio_event_string(char *buf, uint32_t events);
+void encoder_main();
 
 #endif // ENCODER_H

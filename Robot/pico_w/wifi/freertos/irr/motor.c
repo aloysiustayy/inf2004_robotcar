@@ -37,28 +37,29 @@ uint16_t normal_speed;
 
 char motor_command[100]; // receive from task_recv_msg_task
 
-//Define PID controller constants
-float Kp = 0.5;   //Proportional gain
-float Ki = 0.2;   //Integral gain
-float Kd = 0.02;  //Derivative gain
+// Define PID controller constants
+float Kp = 0.5;  // Proportional gain
+float Ki = 0.2;  // Integral gain
+float Kd = 0.02; // Derivative gain
 
 // Define target speed
 float target_speed = 100.0;
-float proportional_factor  = 221.43;
+float proportional_factor = 221.43;
 
-//Function to compute control signal using PID control
-float compute_pid(float setpoint, float current_value, float *integral, float *prev_error) {
-    float error = setpoint - current_value;  //Calculate error by taking desired - current
-    
-    *integral += error;  //Update integral term
-    
-    float derivative = error - *prev_error;  //Calculate derivative term
-    
-    float control_signal = Kp * error + Ki * (*integral) + Kd * derivative;  //Compute control signal
-    
-    *prev_error = error;  //Update previous error in preparation for next iteration
-    
-    return control_signal;  //Return computed control signal
+// Function to compute control signal using PID control
+float compute_pid(float setpoint, float current_value, float *integral, float *prev_error)
+{
+    float error = setpoint - current_value; // Calculate error by taking desired - current
+
+    *integral += error; // Update integral term
+
+    float derivative = error - *prev_error; // Calculate derivative term
+
+    float control_signal = Kp * error + Ki * (*integral) + Kd * derivative; // Compute control signal
+
+    *prev_error = error; // Update previous error in preparation for next iteration
+
+    return control_signal; // Return computed control signal
 }
 
 uint32_t
@@ -169,7 +170,7 @@ void turn_left(uint8_t degree)
     printf("Moving straight now\n");
 }
 
-void u_turn() 
+void u_turn()
 {
     // printf("Notch for left should be more than right\n");
     printf("U-turning now!!");
@@ -202,8 +203,8 @@ void u_turn()
 
 void pid_speed_left()
 {
-    float integral = 0.0;  //Integral term for PID control
-    float prev_error = 0.0;  //Previous error for PID control
+    float integral = 0.0;   // Integral term for PID control
+    float prev_error = 0.0; // Previous error for PID control
     float current_speed = get_speed(LEFT);
     float pid_value_left = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
@@ -213,22 +214,22 @@ void pid_speed_left()
 
     // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, control_pwm_signal);
 
-    printf("current speed left: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_left, new_duty_cycle);
+    // printf("current speed left: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_left, new_duty_cycle);
     // return pid_value;
 }
 
 void pid_speed_right()
 {
-    float integral = 0.0;  //Integral term for PID control
-    float prev_error = 0.0;  //Previous error for PID control
+    float integral = 0.0;   // Integral term for PID control
+    float prev_error = 0.0; // Previous error for PID control
     float current_speed = get_speed(RIGHT);
     float pid_value_right = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
-    float new_duty_cycle = normal_speed + (pid_value_right * proportional_factor);
+    float new_duty_cycle = (normal_speed + (pid_value_right * proportional_factor) * 1.03f);
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, new_duty_cycle);
 
-    printf("current speed right: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_right, new_duty_cycle);
+    // printf("current speed right: %f, current_pid_signal value: %.3f, new duty cycle: %.3f\n", current_speed, pid_value_right, new_duty_cycle);
     // return control_pwm_signal;
 }
 
@@ -251,9 +252,10 @@ void pwm_control()
     uint16_t target_hz = 20;
 
     wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap / 2;
-    slow_speed = wrap / 6;
+    normal_speed = wrap * 0.35f;
+    slow_speed = 0;
 
+    printf("Normal speed is %d\n", normal_speed);
     // Set period of 12500 cycles
     pwm_set_wrap(slice_num_left, wrap);
     pwm_set_wrap(slice_num_right, wrap);
@@ -282,22 +284,21 @@ void react_to_commands(__unused void *params)
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
-        
-        pid_speed_left();
-        pid_speed_right();
+
         // If command is "left=90"
         if (strcmp(motor_command, "left=90") == 0)
         {
             // turn_left(90);
             printf("Turning left now...");
-            turn_left(90);
+            // once detect white, turn 90 straight away
+            // turn_left(90);
             // Reset motor_command
             snprintf(motor_command, sizeof(motor_command), "%s", "");
         }
         else if (strcmp(motor_command, "right=90") == 0)
         {
             printf("Turning right now...");
-            turn_right(90);
+            // turn_right(90);
             // Reset motor_command
             snprintf(motor_command, sizeof(motor_command), "%s", "");
         }
@@ -306,6 +307,11 @@ void react_to_commands(__unused void *params)
             printf("Too near to obstacles... Reversing now...");
             u_turn();
             snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else
+        {
+            pid_speed_left();
+            pid_speed_right();
         }
     }
 }

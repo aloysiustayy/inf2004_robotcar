@@ -7,28 +7,27 @@
 #include "message_buffer.h"
 #include "queue.h"
 
-#define NUM_OF_PINS      2
+#define NUM_OF_PINS 2
 #define LEFT_VCC_PIN 14
-#define LEFT_ANALOG_PIN  15
+#define LEFT_ANALOG_PIN 15
 #define RIGHT_ANALOG_PIN 16
 #define RIGHT_VCC_PIN 17
-#define BLACK            1
-#define WHITE            0
+#define BLACK 1
+#define WHITE 0
 static char event_str[128];
 
 static QueueHandle_t ir_queue_handle;
 
 // Init of global variable
-static const uint8_t analog_pins[] = { LEFT_ANALOG_PIN, RIGHT_ANALOG_PIN };
-int                  stop_signal[] = { 1, 1 };
-alarm_id_t           alarm[]       = { -1, -1 };
-uint8_t              sensor[]      = { WHITE, WHITE };
-uint8_t              prev_sensor[] = { WHITE, WHITE };
+static const uint8_t analog_pins[] = {LEFT_ANALOG_PIN, RIGHT_ANALOG_PIN};
+int stop_signal[] = {1, 1};
+alarm_id_t alarm[] = {-1, -1};
+uint8_t sensor[] = {WHITE, WHITE};
+uint8_t prev_sensor[] = {WHITE, WHITE};
 
 void gpio_event_stringg(char *buf, uint32_t events);
 
-void
-set_black(int pin)
+void set_black(int pin)
 {
     for (int i = NUM_OF_PINS - 1; i > -1; i--)
     {
@@ -39,8 +38,7 @@ set_black(int pin)
     }
 }
 
-void
-set_white(int pin)
+void set_white(int pin)
 {
     for (int i = NUM_OF_PINS - 1; i > -1; i--)
     {
@@ -81,8 +79,7 @@ IRMessageHandler()
  * @param[in] data Data to print out
  * @return -
  */
-void
-send_sensor_data(char *type, uint32_t data)
+void send_sensor_data(char *type, uint32_t data)
 {
 
     char printf_message[100]; // Adjust the buffer size as needed
@@ -91,8 +88,7 @@ send_sensor_data(char *type, uint32_t data)
     xQueueSend(ir_queue_handle, &printf_message, 0);
 }
 
-void
-gpio_callback_ir(uint gpio, uint32_t events)
+void gpio_callback_ir(uint gpio, uint32_t events)
 {
 
     // Put the GPIO event(s) that just happened into event_str
@@ -120,8 +116,7 @@ gpio_callback_ir(uint gpio, uint32_t events)
     }
 }
 
-void
-detectLines(__unused void *params)
+void detectLines(__unused void *params)
 {
 
     gpio_init(LEFT_VCC_PIN);
@@ -142,16 +137,15 @@ detectLines(__unused void *params)
     for (int i = 0; i < NUM_OF_PINS; i++)
     {
         gpio_set_irq_enabled_with_callback(analog_pins[i],
-                                           GPIO_IRQ_EDGE_RISE
-                                               | GPIO_IRQ_EDGE_FALL,
+                                           GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
                                            true,
                                            &gpio_callback_ir);
     }
 
     while (true)
     {
-        
-        for (int i = NUM_OF_PINS-1; i > -1; i--)
+
+        for (int i = NUM_OF_PINS - 1; i > -1; i--)
         {
             if (gpio_get(analog_pins[i]) == 1)
             {
@@ -161,31 +155,33 @@ detectLines(__unused void *params)
             {
                 set_white(analog_pins[i]);
             }
-           
+
             if (sensor[i] != prev_sensor[i])
             {
                 char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
-                
+
                 if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
                 {
-                    printf("Turning right now");
-                    
-                    if(analog_pins[i] == LEFT_ANALOG_PIN){
+                    // printf("Turning right now");
+                    printf("Sensor %d detect %s\n", analog_pins[i], line_colour);
+                    if (analog_pins[i] == LEFT_ANALOG_PIN)
+                    {
                         send_sensor_data("left", 90);
                     }
-                    else if(analog_pins[i] == RIGHT_ANALOG_PIN){
+                    else if (analog_pins[i] == RIGHT_ANALOG_PIN)
+                    {
                         send_sensor_data("right", 90);
                     }
                 }
                 // if (analog_pins[i] == LEFT_ANALOG_PIN)
                 // {
                 //     printf("Left IR Sensor detected: %s\n", line_colour);
-                    // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                    // {
-                    //     printf("Turning left right now");
-                    //     // turn_left(90);
-                    //     send_sensor_data("left", 90);
-                    // }
+                // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+                // {
+                //     printf("Turning left right now");
+                //     // turn_left(90);
+                //     send_sensor_data("left", 90);
+                // }
                 // }
                 // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
                 // {
@@ -210,8 +206,7 @@ static const char *gpio_irq_str[] = {
     "EDGE_RISE"   // 0x8
 };
 
-void
-gpio_event_stringg(char *buf, uint32_t events)
+void gpio_event_stringg(char *buf, uint32_t events)
 {
     for (uint i = 0; i < 4; i++)
     {

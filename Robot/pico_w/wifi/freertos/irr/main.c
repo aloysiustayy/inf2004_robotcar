@@ -121,7 +121,6 @@ void task_recv_ultrasonic_message(__unused void *params)
             set_motor_command(receivedValue);
 
             // Send to webpage?
-
         }
     }
 }
@@ -210,23 +209,14 @@ void main_task(__unused void *params)
 
 void vLaunch(void)
 {
-    TaskHandle_t task;
-    xTaskCreate(main_task,
-                "webserverThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY + 1UL,
-                &task);
 
-    TaskHandle_t barcodetask;
-    xTaskCreate(barcodeLaunch,
-                "barcodeThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &barcodetask);
-
-    
+    // TaskHandle_t barcodetask;
+    // xTaskCreate(barcodeLaunch,
+    //             "barcodeThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &barcodetask);
 
     TaskHandle_t detectLinesTask;
     xTaskCreate(detectLines,
@@ -236,7 +226,6 @@ void vLaunch(void)
                 tskIDLE_PRIORITY,
                 &detectLinesTask);
 
-
     TaskHandle_t encoderTask;
     xTaskCreate(encoder_main,
                 "encoderThread",
@@ -245,21 +234,25 @@ void vLaunch(void)
                 tskIDLE_PRIORITY,
                 &encoderTask);
 
-    TaskHandle_t ultrasonicTask;
-    xTaskCreate(ultrasonic_main,
-                "ultrasonicThread",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                &ultrasonicTask);
+    // TaskHandle_t ultrasonicTask;
+    // xTaskCreate(ultrasonic_main,
+    //             "ultrasonicThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             &ultrasonicTask);
 
-    motor_main();
-    
     // magnetometer_main(); // Run mag
-
+    motor_main();
     // Start all queue tasks
     start_recv_msg_task();
-
+    // TaskHandle_t task;
+    // xTaskCreate(main_task,
+    //             "webserverThread",
+    //             configMINIMAL_STACK_SIZE,
+    //             NULL,
+    //             TEST_TASK_PRIORITY,
+    //             &task);
     vTaskStartScheduler();
 }
 
@@ -268,7 +261,7 @@ int main(void)
     stdio_init_all();
     adc_init();
     // init_i2c();
-
+    // sleep_ms(2000);
     vLaunch();
     /* Configure the hardware ready to run the demo. */
     const char *rtos_name;
