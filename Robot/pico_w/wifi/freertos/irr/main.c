@@ -29,13 +29,13 @@
 #define TEST_TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 #define mbaTASK_MESSAGE_BUFFER_SIZE (60)
 
-#define WIFI_SSID "TAY"
-#define WIFI_PASSWORD "88318831"
-// #define IP_ADDRESS    "172.20.10.10"
-#define IP_ADDRESS "192.168.1.20"
+#define WIFI_SSID "hargaowithchili"
+#define WIFI_PASSWORD "athmqwer"
+#define IP_ADDRESS "172.20.10.10"
+// #define IP_ADDRESS "192.168.1.20"
 #define NETMASK "255.255.255.0"
-// #define GATEWAY "172.20.10.1"
-#define GATEWAY "192.168.1.254"
+#define GATEWAY "172.20.10.1"
+// #define GATEWAY "192.168.1.254"
 
 QueueHandle_t ir_queue_handle;
 QueueHandle_t barcode_queue_handle;
@@ -108,6 +108,7 @@ void task_recv_barcode_message(__unused void *params)
 {
     char receivedValue[100];
 
+    int counter = 0;
     for (;;)
     {
         vTaskDelay(100);
@@ -120,6 +121,14 @@ void task_recv_barcode_message(__unused void *params)
         {
             printf("Barcode: %s\n", receivedValue);
             set_barcode_data(receivedValue);
+        }
+        counter++;
+
+        if (counter >= 50)
+        {
+
+            char *maze_d = "'{ \"maze\": [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]] }'";
+            set_maze_data(maze_d);
         }
     }
 }
@@ -202,13 +211,13 @@ void main_task(__unused void *params)
 
 void vLaunch(void)
 {
-    // TaskHandle_t task;
-    // xTaskCreate(main_task,
-    //             "webserverThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &task);
+    TaskHandle_t task;
+    xTaskCreate(main_task,
+                "webserverThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY + 1UL,
+                &task);
 
     // TaskHandle_t barcodetask;
     // xTaskCreate(barcodeLaunch,
@@ -219,6 +228,7 @@ void vLaunch(void)
     //             &barcodetask);
 
     motor_main();
+
     // TaskHandle_t detectLinesTask;
     // xTaskCreate(detectLines,
     //             "detectLinesThread",
@@ -238,7 +248,7 @@ void vLaunch(void)
     // magnetometer_main(); // Run mag
 
     // Start all queue tasks
-    start_recv_msg_task();
+    // start_recv_msg_task();
 
     vTaskStartScheduler();
 }
@@ -247,7 +257,7 @@ int main(void)
 {
     stdio_init_all();
     adc_init();
-    init_i2c();
+    // init_i2c();
 
     vLaunch();
     /* Configure the hardware ready to run the demo. */

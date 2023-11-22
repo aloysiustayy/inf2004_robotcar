@@ -23,6 +23,7 @@
         ssi.h
         cgi.h
         global_defined.h
+        obstacle.c
         )
     
     # target_compile_definitions(irr_sensor_sys PRIVATE
@@ -48,6 +49,8 @@ target_link_libraries(irr_sensor_sys
     hardware_adc
     hardware_i2c
     hardware_spi
+    pico_ultrasonic
+    hardware_uart
     )
     
 pico_enable_stdio_usb(irr_sensor_sys 1)

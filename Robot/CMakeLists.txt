@@ -32,3 +32,4 @@ endif()
 
 add_subdirectory(pico_w)
 add_subdirectory(pico_webserver)
+add_subdirectory(ultrasonic)

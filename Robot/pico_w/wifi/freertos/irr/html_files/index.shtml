@@ -32,26 +32,34 @@
     </head>
     <body> <h1>PicoW Webserver</h1>
         <br>
-        <h2>This bit is SSI: Yes</h2>
+        <h2>This bit is SSI: i hope so</h2>
         <p>Voltage: <!--#volt--></p>
         <p>Temp: <!--#temp--> C</p>
         <p>LED is: <!--#led--></p>
         <p>Received Message: <!--#message--></p>
+        <p id='maze-value1' hidden><!--#maze1--></p>
+        <p id='maze-value2' hidden><!--#maze2--></p>
+        <div id="maze-container"></div>
         <br>
         <h2>This bit is CGI:</h2>
-        <a href="/led.cgi?led=1"><button>Update Maze</button></a>
-        <a href="/led.cgi?led=0"><button>LED OFF</button></a>
+        <!-- <a href="/led.cgi?led=1"><button>LED ON</button></a>
+        <a href="/led.cgi?led=0"><button>LED OFF</button></a> -->
+        <a href="/index.shtml"><button>Update Maze</button></a>
+        
+
         <br>
         <br>
         <!-- <a href="/index.shtml">Refresh</a> -->
 
-        <div id="maze-container"></div>
+        <!-- <div id="maze-container"> #maze</div> -->
 
         
 
         <script>
             function updateMaze(data) {
               const mazeContainer = document.getElementById('maze-container');
+              
+
               mazeContainer.innerHTML = ''; // Clear previous maze
         
               for (const row of data.maze) {
@@ -69,21 +77,59 @@
             }
         
             function fetchMazeData() {
+
               // Make an HTTP request to your CGI script
-              fetch('/led.cgi')
-                .then(response => response.json())
-                .then(data => {
-                  // Update the maze with the received data
-                  updateMaze(data);
-                })
-                .catch(error => {
-                  console.error('Error fetching data:', error);
-                });
+              // fetch('/maze.cgi')
+              //     .then(response => response.text())  // Change to response.text() to get response as text
+              //     .then(data => {
+              //         // Update the maze with the received data
+              //         console.log(data);
+              //         // updateMaze(data);
+              //     })
+              //     .catch(error => {
+              //         console.error('Error fetching data:', error);
+              //     });
+              // // Make an HTTP request to your CGI script
+              // fetch('/maze.cgi')
+              //   .then(response => response.json())
+              //   .then(data => {
+              //     // Update the maze with the received data
+              //     console.log(response);
+              //     console.log(data);
+              //     // updateMaze(data);
+              //   })
+              //   .catch(error => {
+              //     console.error('Error fetching data:', error);
+              //   });
+              
+              
+              // var xhr = new XMLHttpRequest();
+              // xhr.open('GET', '/maze.cgi');
+              // xhr.onreadystatechange = function () {
+              //     console.log(xhr);
+              //     if (xhr.readyState == 4 && xhr.status == 200) {
+              //         console.log(xhr.responseText);
+              //         // var data = JSON.parse(xhr.responseText);
+              //         // updateMaze(data);
+              //     }
+              // };
+              // xhr.send();
+              
             }
         
             // Call fetchMazeData to initially fetch and display the maze data
-            fetchMazeData();
-        
+            // fetchMazeData();
+            // const dummyData = { maze: [[0, 1, 0], [1, 0, 1], [0, 1, 0] , [1, 1, 1]] };
+            // updateMaze(dummyData);
+            const maze1Values = document.getElementById('maze-value1').innerText;
+            const maze2Values = document.getElementById('maze-value2').innerText;
+            let result = maze1Values.concat("", maze2Values);
+            // console.log(mazeValues);
+            let json_result = JSON.parse(result);
+            // var mazeData = JSON.parse(mazeValues);
+            // console.log(mazeData);
+
+            updateMaze(json_result);
             // Optionally, you can set up a periodic update (e.g., every 5 seconds)
             // setInterval(fetchMazeData, 5000);
           </script>
