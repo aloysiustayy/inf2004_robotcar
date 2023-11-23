@@ -6,12 +6,14 @@
 #define PWM_PIN2 1
 
 // Left and right wheel pin definitions
-#define LEFT_WHEEL_PIN1  10
-#define LEFT_WHEEL_PIN2  11
+#define LEFT_WHEEL_PIN1 10
+#define LEFT_WHEEL_PIN2 11
 #define RIGHT_WHEEL_PIN1 21
 #define RIGHT_WHEEL_PIN2 20
 
 // Function declarations
+void setCarTurning(bool val);
+bool isCarTurning();
 void motor_init();
 void move_forward();
 void move_backward();

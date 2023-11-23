@@ -99,6 +99,7 @@ void send_sensor_data(char *type, uint32_t data)
     snprintf(printf_message, sizeof(printf_message), "%s=%d", type, data);
 
     xQueueSend(ir_queue_handle, &printf_message, 0);
+    printf("Sending %s\n", printf_message);
 }
 
 // void gpio_callback_ir(uint gpio, uint32_t events)
@@ -170,30 +171,23 @@ void send_sensor_data(char *type, uint32_t data)
 //         }
 //     }
 // }
-bool turning = false;
-void isCarTurning(bool val)
-{
-    turning = val;
-}
+
 int64_t
 alarm_callback(alarm_id_t id, void *user_data)
 {
-    // Cast user_data to the appropriate type (in this case, a string)
 
     printf("%d\n", cur_pin);
 
-    if (gpio_get(cur_pin) != 1)
+    if (gpio_get(cur_pin) == 0)
     {
         // this is white
         if (cur_pin == analog_pins[0])
         {
             send_sensor_data("left", 90);
-            turning = true;
         }
         else if (cur_pin == analog_pins[1])
         {
             send_sensor_data("right", 90);
-            turning = true;
         }
     }
 
@@ -219,30 +213,32 @@ void detectLines(__unused void *params)
 
     // printf("Detect line now");
     // for (int i = NUM_OF_PINS - 1; i > -1; i--)
-    // for (int i = 0; i < NUM_OF_PINS; i++)
-    // {
-    //     gpio_set_irq_enabled_with_callback(analog_pins[i],
-    //                                        GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-    //                                        true,
-    //                                        &gpio_callback_ir);
-    // }
+    //     for (int i = 0; i < NUM_OF_PINS; i++)
+    //     {
+    //         gpio_set_irq_enabled_with_callback(analog_pins[i],
+    //                                            GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
+    //                                            true,
+    //                                            &gpio_callback_ir);
+    //     }
+
     printf("Starting IR!");
     while (true)
     {
         vTaskDelay(100);
         for (int i = NUM_OF_PINS - 1; i > -1; i--)
         {
-            if (turning == false)
+            // if (isCarTurning() == false)
+            // {
+            if (gpio_get(analog_pins[i]) == 1)
             {
-                if (gpio_get(analog_pins[i]) == 1)
-                {
-                    set_black(analog_pins[i]);
-                }
-                else
-                {
-                    set_white(analog_pins[i]);
-                }
+                set_black(analog_pins[i]);
             }
+            else
+            {
+                set_white(analog_pins[i]);
+            }
+            // }
+
             if (sensor[i] != prev_sensor[i])
             {
                 // char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
@@ -260,7 +256,7 @@ void detectLines(__unused void *params)
                     //     send_sensor_data("right", 90);
                     // }
                     cur_pin = analog_pins[i];
-                    add_alarm_in_ms(800, alarm_callback, NULL, false);
+                    add_alarm_in_ms(600, alarm_callback, NULL, false);
                 }
                 // if (analog_pins[i] == LEFT_ANALOG_PIN)
                 // {

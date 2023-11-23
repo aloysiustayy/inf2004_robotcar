@@ -6,7 +6,8 @@
 #include "lwip/tcp.h"
 
 // SSI tags - tag length limited to 8 bytes by default
-const char *ssi_tags[] = {"volt", "temp", "led", "message", "maze1", "maze2"};
+// const char *ssi_tags[] = {"volt", "temp", "led", "message", "maze1", "maze2"};
+const char *ssi_tags[] = {"barcode", "motor", "maze1", "maze2"};
 
 char ir_motor_data[100];
 char barcode_data[100];
@@ -19,8 +20,6 @@ void set_ir_motor_command(char *data)
 
 void set_barcode_data(char *data)
 {
-    printf("data is %s\n", data);
-    printf("data size is %s\n", sizeof(data));
     snprintf(barcode_data, sizeof(barcode_data), "%s", data);
     printf("Barcode data still is %s\n", barcode_data);
 }
@@ -66,72 +65,32 @@ char *get_maze_text(int index)
 
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
-    // adc_select_input(4);
-    size_t printed;
-    // char arr[] = "Hello, World!";
 
-    // printf("First half: %s\n", first_half);
-    // printf("Second half: %s\n", second_half);
+    size_t printed;
 
     switch (iIndex)
     {
-    case 0: // volt
+    case 0: // barcode
     {
-        // printf("what 0");
-        // const float voltage = adc_read() * 3.3f / (1 << 12);
-        // printed             = snprintf(pcInsert, iInsertLen, "%f",
-        // voltage);
         printed = snprintf(pcInsert, iInsertLen, "%s", barcode_data);
-        // printf("0 Insert Len at %d\n", iInsertLen);
     }
     break;
-    case 1: // temp
+    case 1: // motor
     {
-        // printf("what 1");
-
-        // const float voltage = adc_read() * 3.3f / (1 << 12);
-        // const float tempC   = 27.0f - (voltage - 0.706f) / 0.001721f;
         printed = snprintf(pcInsert, iInsertLen, "%s", ir_motor_data);
-        // printf("1 Insert Len at %d\n", iInsertLen);
     }
     break;
-    case 2: // led
-    {
-        // printf("what 2");
 
-        // bool led_status = cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN);
-        // if (led_status == true)
-        // {
-        //     printed = snprintf(pcInsert, iInsertLen, "ON");
-        // }
-        // else
-        // {
-        //     printed = snprintf(pcInsert, iInsertLen, "OFF");
-        // }
-    }
-    break;
-    case 3: // message
-    {
-        // printf("what 3");
-        // printf("3 Insert Len at %d\n", iInsertLen);
-        printed = snprintf(pcInsert, iInsertLen, "I am piccoooo!");
-        // printed = snprintf(pcInsert, iInsertLen, first_half);
-    }
-    break;
-    case 4: // maze1
-
+    case 2: // maze1
         printed = snprintf(pcInsert, iInsertLen, get_maze_text(iIndex));
         break;
-    case 5: // maze2
-
+    case 3: // maze2
         printed = snprintf(pcInsert, iInsertLen, get_maze_text(iIndex));
         break;
     default:
         printed = 0;
         break;
     }
-    // printed = snprintf(pcInsert, iInsertLen, "Test");
-    // printf("printed is %s\n", printed);
     return (u16_t)printed;
 }
 

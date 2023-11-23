@@ -46,6 +46,17 @@ float Kd = 0.02; // Derivative gain
 float target_speed = 100.0;
 float proportional_factor = 221.43;
 
+bool turning = false;
+void setCarTurning(bool val)
+{
+    turning = val;
+    printf("Car is turning");
+}
+bool isCarTurning()
+{
+    return turning;
+}
+
 // Function to compute control signal using PID control
 float compute_pid(float setpoint, float current_value, float *integral, float *prev_error)
 {
@@ -117,10 +128,9 @@ void turn_right(uint8_t degree)
     // printf("Notch for left should be more than right\n");
     printf("Turning right by %d degree now\n", degree);
 
-    // Set channel A output high for one cycle before dropping (for GPIO 0)
+    move_stop();
+    sleep_ms(800);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
-
-    // Set channel B output high for one cycle before dropping (for GPIO 1)
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, slow_speed);
 
     // Reset LEFT notch because to turn right, left wheel encoder's notch
@@ -128,7 +138,7 @@ void turn_right(uint8_t degree)
     reset_notch(LEFT);
 
     // This var will contain the notch count needed to turn by 'degree'
-    uint8_t notch_threshold = degree_to_notch(degree);
+    uint8_t notch_threshold = degree_to_notch(degree) * 3;
 
     while (true)
     {
@@ -140,25 +150,58 @@ void turn_right(uint8_t degree)
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
     printf("Moving straight now\n");
-    isCarTurning(false);
+    sleep_ms(500);
 }
 
 void turn_left(uint8_t degree)
 {
     // printf("Notch for right should be more than left\n");
-    printf("Turning left by %d degree now\n", degree);
-    // Set channel A output high for one cycle before dropping (for GPIO 0)
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, slow_speed);
+    // printf("Turning left by %d degree now\n", degree);
+    // move_stop();
+    // sleep_ms(500);
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
+    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
-    // Set channel B output high for one cycle before dropping (for GPIO 1)
+    // // Make left wheel go backwards
+    // gpio_put(LEFT_WHEEL_PIN1, 1);
+    // gpio_put(LEFT_WHEEL_PIN2, 0);
+
+    // // Reset RIGHT notch because to turn left, right wheel encoder's notch
+    // // should be 0 to calculate how many notch it has travelled
+    // reset_notch(RIGHT);
+
+    // // This var will contain the notch count needed to turn by 'degree'
+    // uint8_t notch_threshold = degree_to_notch(degree) * 1.5f;
+    // while (true)
+    // {
+    //     printf("Left Notch is %d\tRight Notch is %d\tThreshold is %d\n", get_notch(LEFT), get_notch(RIGHT), notch_threshold);
+    //     if (get_notch(RIGHT) > notch_threshold)
+    //     {
+    //         break;
+    //     }
+    // }
+
+    // // Make left wheel go straight
+    // gpio_put(LEFT_WHEEL_PIN1, 0);
+    // gpio_put(LEFT_WHEEL_PIN2, 1);
+    // printf("Moving straight now\n");
+    // sleep_ms(500);
+
+    // printf("Notch for left should be more than right\n");
+    printf("Turning left by %d degree now\n", degree);
+
+    move_stop();
+    sleep_ms(800);
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, slow_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
-    // Reset RIGHT notch because to turn left, right wheel encoder's notch
+    // Reset LEFT notch because to turn right, left wheel encoder's notch
     // should be 0 to calculate how many notch it has travelled
     reset_notch(RIGHT);
 
     // This var will contain the notch count needed to turn by 'degree'
-    uint8_t notch_threshold = degree_to_notch(degree);
+    uint8_t notch_threshold = degree_to_notch(degree) * 1.5;
+
     while (true)
     {
         if (get_notch(RIGHT) > notch_threshold)
@@ -167,16 +210,17 @@ void turn_left(uint8_t degree)
         }
     }
 
-    pwm_set_chan_level(slice_num_right, PWM_CHAN_A, normal_speed);
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
-    isCarTurning(false);
+    sleep_ms(500);
 }
 
 void u_turn()
 {
     // printf("Notch for left should be more than right\n");
     printf("U-turning now!!");
-
+    move_stop();
+    sleep_ms(800);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
@@ -188,7 +232,7 @@ void u_turn()
     reset_notch(LEFT);
 
     // This var will contain the notch count needed to turn by 'degree'
-    uint8_t notch_threshold = degree_to_notch(180);
+    uint8_t notch_threshold = (degree_to_notch(180) * 2.2) + 1;
 
     while (true)
     {
@@ -201,6 +245,8 @@ void u_turn()
     gpio_put(RIGHT_WHEEL_PIN1, 0);
     gpio_put(RIGHT_WHEEL_PIN2, 1);
     printf("Moving straight now\n");
+    sleep_ms(500);
+    setCarTurning(false);
 }
 
 void pid_speed_left()
@@ -254,7 +300,7 @@ void pwm_control()
     uint16_t target_hz = 20;
 
     wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap * 0.25f; // make it go slower
+    normal_speed = wrap * 0.4f; // make it go slower
     slow_speed = 0;
 
     // printf("Normal speed is %d\n", normal_speed);
@@ -286,34 +332,43 @@ void react_to_commands(__unused void *params)
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
+        if (turning == false)
+        {
+            // If command is "left=90"
+            if (strcmp(motor_command, "left=90") == 0)
+            {
+                // turn_left(90);
+                printf("Turning left now...");
+                turning = true;
+                // once detect white, turn 90 straight away
+                turn_left(90);
+                turning = false;
+                // Reset motor_command
+                snprintf(motor_command, sizeof(motor_command), "%s", "");
+            }
+            else if (strcmp(motor_command, "right=90") == 0)
+            {
+                printf("Turning right now...");
+                turning = true;
+                turn_right(90);
 
-        // If command is "left=90"
-        if (strcmp(motor_command, "left=90") == 0)
-        {
-            // turn_left(90);
-            printf("Turning left now...");
-            // once detect white, turn 90 straight away
-            // turn_left(90);
-            // Reset motor_command
-            snprintf(motor_command, sizeof(motor_command), "%s", "");
-        }
-        else if (strcmp(motor_command, "right=90") == 0)
-        {
-            printf("Turning right now...");
-            // turn_right(90);
-            // Reset motor_command
-            snprintf(motor_command, sizeof(motor_command), "%s", "");
-        }
-        else if (strcmp(motor_command, "U-turn=180") == 0)
-        {
-            printf("Too near to obstacles... Uturn now...");
-            u_turn();
-            snprintf(motor_command, sizeof(motor_command), "%s", "");
-        }
-        else
-        {
-            pid_speed_left();
-            pid_speed_right();
+                turning = false;
+                // Reset motor_command
+                snprintf(motor_command, sizeof(motor_command), "%s", "");
+            }
+            else if (strcmp(motor_command, "U-turn=180") == 0)
+            {
+                printf("Too near to obstacles... Uturn now...");
+                turning = true;
+                u_turn();
+                turning = false;
+                snprintf(motor_command, sizeof(motor_command), "%s", "");
+            }
+            else
+            {
+                pid_speed_left();
+                pid_speed_right();
+            }
         }
     }
 }

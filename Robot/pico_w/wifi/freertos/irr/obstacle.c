@@ -8,6 +8,7 @@
 #include "hardware/uart.h"
 #include "hardware/gpio.h"
 #include "gpio_handler.h"
+#include "motor.h"
 
 // For moving average
 #define NUM_SAMPLES 4
@@ -127,10 +128,11 @@ void ultrasonic_main(__unused void *params)
         // printf("Moving Average Distance: %d cm\n", movingAverageDist);
 
         // Check if obstacle detected
-        if (movingAverageDist > 0 && movingAverageDist <= 10 && obstacleDetected == false)
+        if (movingAverageDist > 0 && movingAverageDist <= 12 && obstacleDetected == false)
         {
             obstacleDetected = true;
             send_ultrasonic_data("U-turn", 180);
+
             // printf("Obstacle detected\n");
         }
         else

@@ -30,13 +30,13 @@
 #define TEST_TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 #define mbaTASK_MESSAGE_BUFFER_SIZE (60)
 
-#define WIFI_SSID "TAY"
-#define WIFI_PASSWORD "88318831"
-// #define IP_ADDRESS "172.20.10.10"
-#define IP_ADDRESS "192.168.1.20"
+#define WIFI_SSID "hargaowithchili"
+#define WIFI_PASSWORD "athmqwer"
+#define IP_ADDRESS "172.20.10.10"
+// #define IP_ADDRESS "192.168.1.20"
 #define NETMASK "255.255.255.0"
-// #define GATEWAY "172.20.10.1"
-#define GATEWAY "192.168.1.254"
+#define GATEWAY "172.20.10.1"
+// #define GATEWAY "192.168.1.254"
 
 QueueHandle_t ir_queue_handle;
 QueueHandle_t barcode_queue_handle;

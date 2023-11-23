@@ -3,5 +3,4 @@
 
 void detectLines();
 QueueHandle_t IRMessageHandler();
-void isCarTurning(bool val);
 #endif

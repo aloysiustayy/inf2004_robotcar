@@ -32,16 +32,14 @@
     </head>
     <body> <h1>PicoW Webserver</h1>
         <br>
-        <h2>This bit is SSI: i hope so</h2>
-        <p>Barcode: <!--#volt--></p>
-        <p>Temp: <!--#temp--> C</p>
-        <p>LED is: <!--#led--></p>
-        <p>Received Message: <!--#message--></p>
+        <h2>Data from sensors:</h2>
+        <p>Barcode: <!--#barcode--></p>
+        <p>Motor Command: <!--#motor--></p>
         <p id='maze-value1' hidden><!--#maze1--></p>
         <p id='maze-value2' hidden><!--#maze2--></p>
         <div id="maze-container"></div>
         <br>
-        <h2>This bit is CGI:</h2>
+        <!-- <h2>This bit is CGI:</h2> -->
         <!-- <a href="/led.cgi?led=1"><button>LED ON</button></a>
         <a href="/led.cgi?led=0"><button>LED OFF</button></a> -->
         <a href="/index.shtml"><button>Update Maze</button></a>
@@ -129,7 +127,7 @@
             // let json_result = JSON.parse(result);
             // updateMaze(json_result);
             // undo until here!!!
-            
+
             // Optionally, you can set up a periodic update (e.g., every 5 seconds)
             // setInterval(fetchMazeData, 5000);
           </script>
