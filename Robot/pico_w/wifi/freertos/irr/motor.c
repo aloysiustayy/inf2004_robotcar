@@ -140,6 +140,7 @@ void turn_right(uint8_t degree)
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
     printf("Moving straight now\n");
+    isCarTurning(false);
 }
 
 void turn_left(uint8_t degree)
@@ -168,6 +169,7 @@ void turn_left(uint8_t degree)
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
+    isCarTurning(false);
 }
 
 void u_turn()
@@ -225,7 +227,7 @@ void pid_speed_right()
     float current_speed = get_speed(RIGHT);
     float pid_value_right = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
-    float new_duty_cycle = (normal_speed + (pid_value_right * proportional_factor) * 1.03f);
+    float new_duty_cycle = (normal_speed + (pid_value_right * proportional_factor) * 1.08f);
 
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, new_duty_cycle);
 
@@ -252,10 +254,10 @@ void pwm_control()
     uint16_t target_hz = 20;
 
     wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap * 0.35f;
+    normal_speed = wrap * 0.25f; // make it go slower
     slow_speed = 0;
 
-    printf("Normal speed is %d\n", normal_speed);
+    // printf("Normal speed is %d\n", normal_speed);
     // Set period of 12500 cycles
     pwm_set_wrap(slice_num_left, wrap);
     pwm_set_wrap(slice_num_right, wrap);
@@ -304,7 +306,7 @@ void react_to_commands(__unused void *params)
         }
         else if (strcmp(motor_command, "U-turn=180") == 0)
         {
-            printf("Too near to obstacles... Reversing now...");
+            printf("Too near to obstacles... Uturn now...");
             u_turn();
             snprintf(motor_command, sizeof(motor_command), "%s", "");
         }

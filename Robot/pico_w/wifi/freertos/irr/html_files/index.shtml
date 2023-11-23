@@ -33,7 +33,7 @@
     <body> <h1>PicoW Webserver</h1>
         <br>
         <h2>This bit is SSI: i hope so</h2>
-        <p>Voltage: <!--#volt--></p>
+        <p>Barcode: <!--#volt--></p>
         <p>Temp: <!--#temp--> C</p>
         <p>LED is: <!--#led--></p>
         <p>Received Message: <!--#message--></p>
@@ -121,15 +121,15 @@
             // fetchMazeData();
             // const dummyData = { maze: [[0, 1, 0], [1, 0, 1], [0, 1, 0] , [1, 1, 1]] };
             // updateMaze(dummyData);
-            const maze1Values = document.getElementById('maze-value1').innerText;
-            const maze2Values = document.getElementById('maze-value2').innerText;
-            let result = maze1Values.concat("", maze2Values);
-            // console.log(mazeValues);
-            let json_result = JSON.parse(result);
-            // var mazeData = JSON.parse(mazeValues);
-            // console.log(mazeData);
-
-            updateMaze(json_result);
+            
+            // !!!!test comment
+            // const maze1Values = document.getElementById('maze-value1').innerText;
+            // const maze2Values = document.getElementById('maze-value2').innerText;
+            // let result = maze1Values.concat("", maze2Values);
+            // let json_result = JSON.parse(result);
+            // updateMaze(json_result);
+            // undo until here!!!
+            
             // Optionally, you can set up a periodic update (e.g., every 5 seconds)
             // setInterval(fetchMazeData, 5000);
           </script>

@@ -19,18 +19,21 @@ void set_ir_motor_command(char *data)
 
 void set_barcode_data(char *data)
 {
+    printf("data is %s\n", data);
+    printf("data size is %s\n", sizeof(data));
     snprintf(barcode_data, sizeof(barcode_data), "%s", data);
+    printf("Barcode data still is %s\n", barcode_data);
 }
 
 void set_maze_data(char *data)
 {
-    printf("\nData is %s\n", data);
+    // printf("\nData is %s\n", data);
     maze_data = malloc(sizeof(char) * (strlen(data) + 1));
 
-    snprintf(maze_data, strlen(data) + 1, "%s", data);
-    printf("\nMaze is %s\n", maze_data);
+    snprintf(maze_data, strlen(data), "%s", data);
+    // printf("\nMaze is %s\n", maze_data);
 
-    printf("Data size: %d\nMaze size: %d\n", strlen(data), strlen(maze_data));
+    // printf("Data size: %d\nMaze size: %d\n", strlen(data), strlen(maze_data));
 }
 char *get_maze_data()
 {
@@ -135,76 +138,76 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 // Initialise the SSI handler
 void ssi_init()
 {
-    // Assuming a 10x10 grid
-    int rows = 10;
-    int cols = 10;
+    // // Assuming a 10x10 grid
+    // int rows = 10;
+    // int cols = 10;
 
-    // Initialize an array to store the values
-    int grid[10][10];
+    // // Initialize an array to store the values
+    // int grid[10][10];
 
-    // Populate the grid with 0 (you can replace this with your actual values)
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            grid[i][j] = 0;
-        }
-    }
+    // // Populate the grid with 0 (you can replace this with your actual values)
+    // for (int i = 0; i < rows; i++)
+    // {
+    //     for (int j = 0; j < cols; j++)
+    //     {
+    //         grid[i][j] = 0;
+    //     }
+    // }
 
-    // Initialize the string
-    char md[2048]; // Adjust the size as needed
+    // // Initialize the string
+    // char md[2048]; // Adjust the size as needed
 
-    // Use sprintf to format the string
-    sprintf(md, "[");
+    // // Use sprintf to format the string
+    // sprintf(md, "[");
 
-    for (int i = 0; i < rows; i++)
-    {
-        sprintf(md + strlen(md), "[");
-        for (int j = 0; j < cols; j++)
-        {
-            sprintf(md + strlen(md), "%d", grid[i][j]);
+    // for (int i = 0; i < rows; i++)
+    // {
+    //     sprintf(md + strlen(md), "[");
+    //     for (int j = 0; j < cols; j++)
+    //     {
+    //         sprintf(md + strlen(md), "%d", grid[i][j]);
 
-            // Add a comma if it's not the last element in the row
-            if (j < cols - 1)
-            {
-                sprintf(md + strlen(md), ", ");
-            }
-        }
-        sprintf(md + strlen(md), "]");
+    //         // Add a comma if it's not the last element in the row
+    //         if (j < cols - 1)
+    //         {
+    //             sprintf(md + strlen(md), ", ");
+    //         }
+    //     }
+    //     sprintf(md + strlen(md), "]");
 
-        // Add a comma if it's not the last row
-        if (i < rows - 1)
-        {
-            sprintf(md + strlen(md), ", ");
-        }
-    }
-    sprintf(md + strlen(md), "]");
-    char *ms = "{ \"maze\":";
-    char *me = "}";
+    //     // Add a comma if it's not the last row
+    //     if (i < rows - 1)
+    //     {
+    //         sprintf(md + strlen(md), ", ");
+    //     }
+    // }
+    // sprintf(md + strlen(md), "]");
+    // char *ms = "{ \"maze\":";
+    // char *me = "}";
 
-    // Allocate memory for the concatenated string
-    char *concatenated = (char *)malloc(strlen(ms) + strlen(md) + strlen(me) + 1);
+    // // Allocate memory for the concatenated string
+    // char *concatenated = (char *)malloc(strlen(ms) + strlen(md) + strlen(me) + 1);
 
-    // Check if memory allocation was successful
-    if (concatenated == NULL)
-    {
-        fprintf(stderr, "Memory allocation failed\n");
-        return; // Exit the function
-    }
+    // // Check if memory allocation was successful
+    // if (concatenated == NULL)
+    // {
+    //     fprintf(stderr, "Memory allocation failed\n");
+    //     return; // Exit the function
+    // }
 
-    // Construct the concatenated string
-    strcpy(concatenated, ms);
-    strcat(concatenated, md);
-    strcat(concatenated, me);
+    // // Construct the concatenated string
+    // strcpy(concatenated, ms);
+    // strcat(concatenated, md);
+    // strcat(concatenated, me);
 
-    // Print the concatenated string for verification
-    printf("Concatenated: %s\n", concatenated);
+    // // Print the concatenated string for verification
+    // // printf("Concatenated: %s\n", concatenated);
 
-    // Set the maze data
-    set_maze_data(concatenated);
+    // // Set the maze data
+    // set_maze_data(concatenated);
 
-    // Free the allocated memory
-    free(concatenated);
+    // // Free the allocated memory
+    // free(concatenated);
 
     // Set up the SSI handler
     http_set_ssi_handler(ssi_handler, ssi_tags, LWIP_ARRAYSIZE(ssi_tags));

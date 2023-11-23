@@ -1,13 +1,7 @@
 #include "pico/stdlib.h"
 #include <stdio.h>
-#include "FreeRTOS.h"
-#include "task.h"
-#include "message_buffer.h"
-#include "queue.h"
 #include "ultrasonic.h"
 #include "hardware/uart.h"
-#include "hardware/gpio.h"
-#include "gpio_handler.h"
 
 // For moving average
 #define NUM_SAMPLES 4
@@ -15,10 +9,8 @@
 uint trigPin = 6;
 uint echoPin = 7;
 
-static QueueHandle_t ultrasonic_queue_handle;
-
 bool obstacleDetected;
-// void echoPinInterrupt(uint gpio, uint32_t events);
+void echoPinInterrupt(uint gpio, uint32_t events);
 
 // Kalman filter parameters
 double x_est_last = 0;
@@ -26,31 +18,6 @@ double P_last = 1;
 double Q = 0.022; // Process noise covariance
 double R = 0.617; // Measurement noise covariance
 
-/*!
- * @brief Sends a message to the queue ("Text = Data\\n")
- * @param[in] type	Text
- * @param[in] data Data to print out
- * @return -
- */
-void send_ultrasonic_data(char *type, uint32_t data)
-{
-
-    char printf_message[100]; // Adjust the buffer size as needed
-    snprintf(printf_message, sizeof(printf_message), "%s=%d", type, data);
-
-    xQueueSend(ultrasonic_queue_handle, &printf_message, 0);
-}
-
-QueueHandle_t
-UltrasonicMessageHandler()
-{
-    if (ultrasonic_queue_handle == NULL)
-    {
-        ultrasonic_queue_handle = xQueueCreate(5, sizeof(char) * 100);
-    }
-
-    return ultrasonic_queue_handle;
-}
 // Kalman filter function
 double kalmanFilter(double z_measured)
 {
@@ -93,8 +60,9 @@ uint16_t calculateMovingAverage(uint16_t newReading, uint16_t readings[], int *i
     return movingAverage;
 }
 
-void ultrasonic_main(__unused void *params)
+int main()
 {
+    stdio_init_all();
     setupUltrasonicPins(trigPin, echoPin);
 
     uint16_t readings[NUM_SAMPLES] = {0};
@@ -103,22 +71,16 @@ void ultrasonic_main(__unused void *params)
     int count = 0;
 
     // Set up an interrupt handler for the echo pin
-    // gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoPinInterrupt);
-    gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
-
-    // ultrasonic_queue_handle = UltrasonicMessageHandler();
+    gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoPinInterrupt);
 
     while (1)
     {
-        // Delay between each reading
-        vTaskDelay(100);
 
         uint64_t distReading = getCm(trigPin, echoPin);
-        // printf("i am ultrasonic (%d)\n", getCode());
 
         // Calculate the moving average
         uint16_t movingAverageDist = calculateMovingAverage(distReading, readings, &index, &sum, &count);
-
+        printf("movingAverageDist reading %d\n", movingAverageDist);
         // Apply Kalman filter to the sensor measurement
         // double kalmanFilteredDist = kalmanFilter(distReading);
 
@@ -127,17 +89,14 @@ void ultrasonic_main(__unused void *params)
         // printf("Moving Average Distance: %d cm\n", movingAverageDist);
 
         // Check if obstacle detected
-        if (movingAverageDist > 0 && movingAverageDist <= 10 && obstacleDetected == false)
+        if (movingAverageDist > 0 && movingAverageDist < 8)
         {
             obstacleDetected = true;
-            send_ultrasonic_data("U-turn", 180);
-            // printf("Obstacle detected\n");
-        }
-        else
-        {
-            // prevent ultrasonic from spamming send_ultrasonic_data method
-            obstacleDetected = false;
+            printf("Obstacle detected\n");
         }
         // printf("\n %d cm", getCm(trigPin, echoPin));
+
+        // Delay between each reading
+        sleep_ms(100);
     }
 }

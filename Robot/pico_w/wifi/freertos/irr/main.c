@@ -30,13 +30,13 @@
 #define TEST_TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 #define mbaTASK_MESSAGE_BUFFER_SIZE (60)
 
-#define WIFI_SSID "hargaowithchili"
-#define WIFI_PASSWORD "athmqwer"
-#define IP_ADDRESS "172.20.10.10"
-// #define IP_ADDRESS "192.168.1.20"
+#define WIFI_SSID "TAY"
+#define WIFI_PASSWORD "88318831"
+// #define IP_ADDRESS "172.20.10.10"
+#define IP_ADDRESS "192.168.1.20"
 #define NETMASK "255.255.255.0"
-#define GATEWAY "172.20.10.1"
-// #define GATEWAY "192.168.1.254"
+// #define GATEWAY "172.20.10.1"
+#define GATEWAY "192.168.1.254"
 
 QueueHandle_t ir_queue_handle;
 QueueHandle_t barcode_queue_handle;
@@ -79,7 +79,6 @@ void task_recv_barcode_message(__unused void *params)
 {
     char receivedValue[100];
 
-    int counter = 0;
     for (;;)
     {
         vTaskDelay(100);
@@ -90,7 +89,7 @@ void task_recv_barcode_message(__unused void *params)
 
         if (xQueueReceive(barcode_queue_handle, &receivedValue, portMAX_DELAY) == pdPASS)
         {
-            printf("Barcode: %s\n", receivedValue);
+            printf("Barcode is : %s\n", receivedValue);
             set_barcode_data(receivedValue);
         }
     }
@@ -115,7 +114,7 @@ void task_recv_ultrasonic_message(__unused void *params)
 
         if (xQueueReceive(ultrasonic_queue_handle, &receivedValue, portMAX_DELAY) == pdPASS)
         {
-            printf("Motor: %s\n", receivedValue);
+            printf("UTURN OR NOT: %s\n", receivedValue);
 
             // Set motor_command in motor.c
             set_motor_command(receivedValue);
@@ -190,7 +189,7 @@ void main_task(__unused void *params)
     // Initialise web server
     httpd_init();
     printf("Http server initialised\n");
-    printf("Starting server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    // printf("Starting server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
 
     // Configure SSI and CGI handler
     ssi_init();
@@ -203,20 +202,26 @@ void main_task(__unused void *params)
     {
         vTaskDelay(100);
     }
-
-    cyw43_arch_deinit();
 }
 
 void vLaunch(void)
 {
 
-    // TaskHandle_t barcodetask;
-    // xTaskCreate(barcodeLaunch,
-    //             "barcodeThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &barcodetask);
+    TaskHandle_t task;
+    xTaskCreate(main_task,
+                "webserverThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY + 1UL,
+                &task);
+
+    TaskHandle_t barcodetask;
+    xTaskCreate(barcodeLaunch,
+                "barcodeThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &barcodetask);
 
     TaskHandle_t detectLinesTask;
     xTaskCreate(detectLines,
@@ -234,25 +239,19 @@ void vLaunch(void)
                 tskIDLE_PRIORITY,
                 &encoderTask);
 
-    // TaskHandle_t ultrasonicTask;
-    // xTaskCreate(ultrasonic_main,
-    //             "ultrasonicThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &ultrasonicTask);
-
-    // magnetometer_main(); // Run mag
+    // // magnetometer_main(); // Run mag
     motor_main();
+
+    TaskHandle_t ultrasonicTask;
+    xTaskCreate(ultrasonic_main,
+                "ultrasonicThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &ultrasonicTask);
+
     // Start all queue tasks
     start_recv_msg_task();
-    // TaskHandle_t task;
-    // xTaskCreate(main_task,
-    //             "webserverThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             TEST_TASK_PRIORITY,
-    //             &task);
     vTaskStartScheduler();
 }
 
@@ -261,13 +260,13 @@ int main(void)
     stdio_init_all();
     adc_init();
     // init_i2c();
-    // sleep_ms(2000);
+    sleep_ms(3000);
     vLaunch();
     /* Configure the hardware ready to run the demo. */
-    const char *rtos_name;
-    rtos_name = "FreeRTOS";
+    // const char *rtos_name;
+    // rtos_name = "FreeRTOS";
 
-    printf("Starting %s on core 0:\n", rtos_name);
-    vLaunch();
+    // printf("Starting %s on core 0:\n", rtos_name);
+    // vLaunch();
     return 0;
 }

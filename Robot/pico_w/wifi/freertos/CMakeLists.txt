@@ -4,4 +4,5 @@ else()
     include(FreeRTOS_Kernel_import.cmake)
 
     add_subdirectory(irr)
+    add_subdirectory(obstacle_detection)
 endif()

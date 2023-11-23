@@ -1,6 +1,7 @@
 #ifndef ir_h
 #define ir_h
 
-void          detectLines();
+void detectLines();
 QueueHandle_t IRMessageHandler();
+void isCarTurning(bool val);
 #endif

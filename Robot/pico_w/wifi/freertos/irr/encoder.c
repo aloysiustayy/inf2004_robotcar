@@ -10,6 +10,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "encoder.h"
+#include "gpio_handler.h"
 
 #define LEFT_VCC_PIN 13
 #define RIGHT_VCC_PIN 18
@@ -51,7 +52,7 @@ float get_speed(uint side)
 
 void gpio_event_string(char *buf, uint32_t events);
 
-void gpio_callback(uint gpio, uint32_t events)
+void encoder_callback(uint gpio, uint32_t events)
 {
     int encoder_index = -1; // Initialize to an invalid index
     for (int i = 0; i < 2; i++)
@@ -108,7 +109,7 @@ void gpio_callback(uint gpio, uint32_t events)
 void encoder_main(__unused void *params)
 {
     // stdio_init_all();
-    printf("Starting main encoder");
+    // printf("Starting main encoder");
     // Supply power
     gpio_init(LEFT_VCC_PIN);
     gpio_set_dir(LEFT_VCC_PIN, GPIO_OUT);
@@ -116,7 +117,7 @@ void encoder_main(__unused void *params)
     gpio_init(RIGHT_VCC_PIN);
     gpio_set_dir(RIGHT_VCC_PIN, GPIO_OUT);
     gpio_put(RIGHT_VCC_PIN, 1);
-    printf("encoder main");
+    // printf("encoder main");
     // printf("Wheel Encoder\n");
     for (int i = 0; i < 2; i++)
     {
@@ -126,7 +127,8 @@ void encoder_main(__unused void *params)
                                            true,
                                            &gpio_callback);
     }
-    printf("SUCCESS main encoder");
+
+    // printf("SUCCESS main encoder");
     // Wait forever
     while (1)
     {

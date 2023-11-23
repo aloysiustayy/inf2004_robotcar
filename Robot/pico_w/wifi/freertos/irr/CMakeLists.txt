@@ -5,7 +5,6 @@
     execute_process(COMMAND
         py convert_html.py
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-
     )
 
     add_executable(irr_sensor_sys
@@ -22,9 +21,11 @@
         magnetometer.h
         ssi.h
         cgi.h
-        global_defined.h
         obstacle.c
         obstacle.h
+        global_defined.h
+        gpio_handler.c
+        gpio_handler.h
         )
     
     # target_compile_definitions(irr_sensor_sys PRIVATE
@@ -50,8 +51,8 @@ target_link_libraries(irr_sensor_sys
     hardware_adc
     hardware_i2c
     hardware_spi
-    pico_ultrasonic
     hardware_uart
+    pico_ultrasonic
     )
     
 pico_enable_stdio_usb(irr_sensor_sys 1)

@@ -165,16 +165,16 @@ void get_readings(__unused void *params)
         read_mag_data(&mx, &my, &mz);
 
         // Apply Kalman filter to accelerometer and magnetometer data
-        // ax = kalman_filter((float)ax, prev_estimate_ax, 1.0, 0.1, 1);
-        // ay = kalman_filter((float)ay, prev_estimate_ay, 1.0, 0.1, 1);
-        // az = kalman_filter((float)az, prev_estimate_az, 1.0, 0.1, 1);
+        ax = kalman_filter((float)ax, prev_estimate_ax, 1.0, 0.1, 1);
+        ay = kalman_filter((float)ay, prev_estimate_ay, 1.0, 0.1, 1);
+        az = kalman_filter((float)az, prev_estimate_az, 1.0, 0.1, 1);
 
-        // mx = kalman_filter((float)mx, prev_estimate_mx, 1.0, 0.1, 1);
-        // my = kalman_filter((float)my, prev_estimate_my, 1.0, 0.1, 1);
-        // mz = kalman_filter((float)mz, prev_estimate_mz, 1.0, 0.1, 1);
+        mx = kalman_filter((float)mx, prev_estimate_mx, 1.0, 0.1, 1);
+        my = kalman_filter((float)my, prev_estimate_my, 1.0, 0.1, 1);
+        mz = kalman_filter((float)mz, prev_estimate_mz, 1.0, 0.1, 1);
 
         // get heading
-        float heading = get_heading(mx, my);
+        // float heading = get_heading(mx, my);
 
         // Calculate the coordinates
         // float coordinate[3] = {0.0f, 0.0f, 0.0f};
@@ -185,7 +185,7 @@ void get_readings(__unused void *params)
 
         // print data
         // printf("Accelerometer: X=%d, Y=%d, Z=%d\n", ax, ay, az);
-        printf("Magnetometer: X=%d, Y=%d, Z=%d Heading: %.2f\n", mx, my, mz, heading);
+        // printf("Magnetometer: X=%d, Y=%d, Z=%d Heading: %.2f\n", mx, my, mz, heading);
 
         vTaskDelay(100);
     }

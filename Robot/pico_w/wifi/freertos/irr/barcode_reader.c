@@ -63,7 +63,7 @@ enum bar
 };
 // 303121213
 // Alphabets in Code 39 format (each barcode uses 9 bartype)
-static char *A_ARRAY_MAP = "213130312";
+static char *A_ARRAY_MAP = "213130312"; // 213031312
 static char *B_ARRAY_MAP = "312130312";
 static char *C_ARRAY_MAP = "212130313";
 static char *D_ARRAY_MAP = "313120312";
@@ -171,6 +171,14 @@ isValidBarcode()
 
     if (barcodeRead[0] == '*' && barcodeRead[2] == '*')
     {
+        if (barcodeRead[1] != 0)
+            return 1;
+    }
+    else if (barcodeRead[0] == 'P' && barcodeRead[2] == 'P')
+    {
+        barcodeRead[0] = '*';
+        barcodeRead[2] = '*';
+
         if (barcodeRead[1] != 0)
             return 1;
     }
@@ -288,14 +296,15 @@ compareTwoArray()
     for (int i = 0; i < 27; i++)
     {
         // left to right
-        if (strncmp(barcodes[i], string, BARCODE_ARR_SIZE) == 0)
-        {
-            free(string);
-            resetBarcodes();
-            return characters[i];
-        }
-        // right to left
-        if (strncmp(reverseString(barcodes[i]), string, BARCODE_ARR_SIZE) == 0)
+        // if (strncmp(barcodes[i], string, BARCODE_ARR_SIZE) == 0)
+        // {
+        //     free(string);
+        //     resetBarcodes();
+        //     return characters[i];
+        // }
+        // // right to left
+        if (strncmp(reverseString(barcodes[i]), string, BARCODE_ARR_SIZE) == 0 ||
+            strncmp(barcodes[i], string, BARCODE_ARR_SIZE) == 0)
         {
             free(string);
             resetBarcodes();
@@ -438,32 +447,6 @@ ADC_IRQ_FIFO_HANDLER()
     irq_clear(ADC_IRQ_FIFO);
 }
 
-void temp_detect(__unused void *params)
-{
-    while (true)
-    {
-        // i2c_write_byte('I');
-        if (isValidBarcode())
-        {
-            printf("Valid Barcode\n\r");
-            firstBarcode = barcodeRead[0];
-            secondBarcode = barcodeRead[1];
-            thirdBarcode = barcodeRead[2];
-            printf("Barcode: %c%c%c\n\r",
-                   firstBarcode,
-                   secondBarcode,
-                   thirdBarcode);
-            // sendBarcodeVal(); To send barcode values to comms
-            clearBarcodeRead();
-            firstBarcode = 0;
-            secondBarcode = 0;
-            thirdBarcode = 0;
-        }
-        vTaskDelay(100);
-        // printf("running barcode task");
-    }
-}
-
 QueueHandle_t
 BarcodeMessageHandler()
 {
@@ -485,18 +468,20 @@ void send_barcode_data()
 {
 
     char printf_message[100]; // Adjust the buffer size as needed
+
     snprintf(printf_message,
              sizeof(printf_message),
              "%c%c%c",
              barcodeRead[0],
              barcodeRead[1],
              barcodeRead[2]);
-
+    printf("Sending %s....\n", printf_message);
     xQueueSend(barcode_queue_handle, &printf_message, 0);
 }
 
 void barcodeLaunch(__unused void *params)
 {
+
     gpio_init(19);
     gpio_set_dir(19, GPIO_OUT);
     gpio_put(19, 1);
@@ -524,17 +509,13 @@ void barcodeLaunch(__unused void *params)
 
     blockStart = get_absolute_time();
     printf("Barcode reading");
-
-    if (barcode_queue_handle == NULL)
-    {
-        barcode_queue_handle = xQueueCreate(5, sizeof(char) * 100);
-    }
+    barcode_queue_handle = BarcodeMessageHandler();
 
     while (true)
     {
         vTaskDelay(100);
         adc_select_input(0);
-        // i2c_write_byte('I');
+
         if (isValidBarcode())
         {
             printf("Valid Barcode\n\r");
@@ -542,7 +523,7 @@ void barcodeLaunch(__unused void *params)
             secondBarcode = barcodeRead[1];
             thirdBarcode = barcodeRead[2];
 
-            printf("Barcode: %c%c%c\n\r",
+            printf("Correct Barcode: %c%c%c\n\r",
                    firstBarcode,
                    secondBarcode,
                    thirdBarcode);
@@ -556,20 +537,4 @@ void barcodeLaunch(__unused void *params)
 
         // printf("running barcode task");
     }
-    // TaskHandle_t temp_task;
-    // if (xTaskCreate(temp_detect,
-    //                 "tempdetectTask",
-    //                 configMINIMAL_STACK_SIZE,
-    //                 NULL,
-    //                 8,
-    //                 &temp_task)
-    //     != pdPASS)
-    // {
-    //     printf("Failed to create tempdetectTask\n");
-    //     return;
-    // }
-    // else
-    // {
-    //     printf("Successfully created tempdetectTask\n");
-    // }
 }
