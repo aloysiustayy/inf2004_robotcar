@@ -34,6 +34,7 @@ uint slice_num_right;
 uint16_t wrap;
 uint16_t slow_speed;
 uint16_t normal_speed;
+uint16_t left_speed;
 
 char motor_command[100]; // receive from task_recv_msg_task
 
@@ -191,7 +192,8 @@ void turn_left(uint8_t degree)
     printf("Turning left by %d degree now\n", degree);
 
     move_stop();
-    sleep_ms(800);
+    // sleep_ms(800);
+    vTaskDelay(500);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, slow_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
@@ -212,7 +214,8 @@ void turn_left(uint8_t degree)
 
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
-    sleep_ms(500);
+    // sleep_ms(500);
+    vTaskDelay(500);
 }
 
 void u_turn()
@@ -256,7 +259,7 @@ void pid_speed_left()
     float current_speed = get_speed(LEFT);
     float pid_value_left = compute_pid(target_speed, current_speed, &integral, &prev_error);
 
-    float new_duty_cycle = normal_speed + (pid_value_left * proportional_factor);
+    float new_duty_cycle = left_speed + (pid_value_left * proportional_factor);
 
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, new_duty_cycle);
 
@@ -297,11 +300,14 @@ void pwm_control()
 
     uint16_t sample_size = 12500;
     uint16_t default_hz = 100;
-    uint16_t target_hz = 20;
+    uint16_t target_hz = 25;
 
     wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap * 0.4f; // make it go slower
+    normal_speed = wrap; // make it go slower
     slow_speed = 0;
+    
+    // Calibrate
+    left_speed = wrap*0.8;
 
     // printf("Normal speed is %d\n", normal_speed);
     // Set period of 12500 cycles
@@ -309,7 +315,7 @@ void pwm_control()
     pwm_set_wrap(slice_num_right, wrap);
 
     // Set channel A output high for one cycle before dropping (for GPIO 0)
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
 
     // Set channel B output high for one cycle before dropping (for GPIO 1)
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
@@ -325,10 +331,33 @@ void set_motor_command(char *data)
     snprintf(motor_command, sizeof(motor_command), "%s", data);
 }
 
+void move_straight() {
+
+    // // Move for 1 seconds
+    // sleep_ms(650);
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, 0);
+    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, 0);
+
+    // // Stop for 2 seconds
+    // sleep_ms(2000);
+
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
+    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
+
+    
+
+    
+
+    
+}
+
 void react_to_commands(__unused void *params)
 {
     while (true)
     {
+
+       
+
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
@@ -364,10 +393,23 @@ void react_to_commands(__unused void *params)
                 turning = false;
                 snprintf(motor_command, sizeof(motor_command), "%s", "");
             }
+            else if (strcmp(motor_command, "stop=1") == 0)
+            {
+                // turn_left(90);
+                // printf("Turning left now...");
+                turning = true;
+                // once detect white, turn 90 straight away
+                move_stop();
+                turn_left(90);
+                turning = false; // this line will make it move immediately on next loop (goes to else statement)
+                // Reset motor_command
+                snprintf(motor_command, sizeof(motor_command), "%s", "");
+            }
             else
             {
                 pid_speed_left();
                 pid_speed_right();
+                move_straight();
             }
         }
     }

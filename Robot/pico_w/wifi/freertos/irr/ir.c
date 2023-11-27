@@ -238,26 +238,36 @@ void detectLines(__unused void *params)
                 set_white(analog_pins[i]);
             }
             // }
-
+            
             if (sensor[i] != prev_sensor[i])
             {
+                // Check if both are black
+                if (sensor[0] == BLACK && sensor[1] == BLACK)
+                {
+                    printf("both black");
+                    // send_sensor_data("left", 90);
+                    send_sensor_data("stop", 1);
+                }
                 // char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
 
-                if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                {
-                    // printf("Turning right now");
-                    // printf("Sensor %d detect %s\n", analog_pins[i], line_colour);
-                    // if (analog_pins[i] == LEFT_ANALOG_PIN)
-                    // {
-                    //     send_sensor_data("left", 90);
-                    // }
-                    // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
-                    // {
-                    //     send_sensor_data("right", 90);
-                    // }
-                    cur_pin = analog_pins[i];
-                    add_alarm_in_ms(600, alarm_callback, NULL, false);
-                }
+                // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+                // {
+                // printf("Turning right now");
+                // printf("Sensor %d detect %s\n", analog_pins[i], line_colour);
+                // if (analog_pins[i] == LEFT_ANALOG_PIN)
+                // {
+                //     send_sensor_data("left", 90);
+                // }
+                // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
+                // {
+                //     send_sensor_data("right", 90);
+                // }
+                // cur_pin = analog_pins[i];
+                // add_alarm_in_ms(600, alarm_callback, NULL, false);
+                // if(sensor[0] == BLACK && sensor[1] == BLACK){
+                //
+                // }
+                // }
                 // if (analog_pins[i] == LEFT_ANALOG_PIN)
                 // {
                 //     printf("Left IR Sensor detected: %s\n", line_colour);
