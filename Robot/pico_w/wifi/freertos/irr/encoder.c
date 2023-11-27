@@ -18,11 +18,34 @@
 #define NUM_OF_PINS 2
 static char event_str[128];
 static const uint32_t encoder_pins[] = {2, 3};
-static const float wheel_circumference[] = {2.6, 2.6};
+// static const float wheel_circumference[] = {2.6, 2.6};
+static const float wheel_circumference[] = {18, 18};
+
 static uint32_t notch_count[] = {0, 0};
 static float speed_count[] = {0.0, 0.0};
 static uint32_t pulse_start_time[] = {0, 0};
 static float distance[] = {0.0, 0.0};
+
+void reset_distance(uint side)
+{
+    if (side >= 0 && side < NUM_OF_PINS)
+    {
+        distance[side] = 0;
+    }
+    else if (side == -1)
+    {
+        distance[0] = 0;
+        distance[1] = 0;
+    }
+}
+float get_distance(uint side)
+{
+    if (side >= 0 && side < NUM_OF_PINS)
+    {
+        return distance[side];
+    }
+    return -1;
+}
 
 void reset_notch(uint side)
 {
@@ -92,7 +115,8 @@ void encoder_callback(uint gpio, uint32_t events)
         // printf("Encoder #%d, speed: %f\n", encoder_index, speed_count[encoder_index]);
 
         // Update the distance traveled
-        distance[encoder_index] += wheel_circumference[encoder_index];
+        distance[encoder_index] += wheel_circumference[encoder_index] / 20;
+        // printf("Distance %.2f\n", distance[encoder_index]);
 
         // printf(
         //     "Encoder %d - Notch Count: %d, Distance: %.2f cm, Speed: %.2f "

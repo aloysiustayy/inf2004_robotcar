@@ -15,6 +15,8 @@
     }
 
 // Function declarations
+void reset_distance(uint side);
+float get_distance(uint side);
 void reset_notch(uint side);
 uint32_t get_notch(uint side);
 float get_speed(uint side);

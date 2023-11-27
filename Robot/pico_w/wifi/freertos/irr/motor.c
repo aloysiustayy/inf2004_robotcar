@@ -47,11 +47,22 @@ float Kd = 0.02; // Derivative gain
 float target_speed = 100.0;
 float proportional_factor = 221.43;
 
+// Current robot's state
+State curState;
+
 bool turning = false;
+void setState(State newState)
+{
+    curState = newState;
+}
+State getState()
+{
+    return curState;
+}
 void setCarTurning(bool val)
 {
     turning = val;
-    printf("Car is turning");
+    // printf("Car is turning");
 }
 bool isCarTurning()
 {
@@ -104,6 +115,12 @@ void move_forward()
     gpio_put(LEFT_WHEEL_PIN2, 1);
     gpio_put(RIGHT_WHEEL_PIN1, 0);
     gpio_put(RIGHT_WHEEL_PIN2, 1);
+
+    // Set channel A output high for one cycle before dropping (for GPIO 0)
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
+
+    // Set channel B output high for one cycle before dropping (for GPIO 1)
+    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 }
 
 void move_backward()
@@ -130,7 +147,8 @@ void turn_right(uint8_t degree)
     printf("Turning right by %d degree now\n", degree);
 
     move_stop();
-    sleep_ms(800);
+    // sleep_ms(800);
+    vTaskDelay(800);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, slow_speed);
 
@@ -149,9 +167,10 @@ void turn_right(uint8_t degree)
         }
     }
 
-    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
-    printf("Moving straight now\n");
-    sleep_ms(500);
+    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
+    // printf("Moving straight now\n");
+    // sleep_ms(500);
+    vTaskDelay(500);
 }
 
 void turn_left(uint8_t degree)
@@ -192,7 +211,7 @@ void turn_left(uint8_t degree)
     printf("Turning left by %d degree now\n", degree);
 
     move_stop();
-    // sleep_ms(800);
+
     vTaskDelay(500);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, slow_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
@@ -212,8 +231,6 @@ void turn_left(uint8_t degree)
         }
     }
 
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
-    printf("Moving straight now\n");
     // sleep_ms(500);
     vTaskDelay(500);
 }
@@ -221,12 +238,14 @@ void turn_left(uint8_t degree)
 void u_turn()
 {
     // printf("Notch for left should be more than right\n");
-    printf("U-turning now!!");
+    // printf("U-turning now!!");
     move_stop();
-    sleep_ms(800);
+
+    vTaskDelay(800);
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
+    // Reverse Right wheel
     gpio_put(RIGHT_WHEEL_PIN1, 1);
     gpio_put(RIGHT_WHEEL_PIN2, 0);
 
@@ -245,10 +264,13 @@ void u_turn()
         }
     }
 
+    // Set Right wheel to forward
     gpio_put(RIGHT_WHEEL_PIN1, 0);
     gpio_put(RIGHT_WHEEL_PIN2, 1);
-    printf("Moving straight now\n");
-    sleep_ms(500);
+
+    // printf("Moving straight now\n");
+    // sleep_ms(500);
+    vTaskDelay(500);
     setCarTurning(false);
 }
 
@@ -298,16 +320,13 @@ void pwm_control()
     pwm_set_clkdiv(slice_num_left, 100);
     pwm_set_clkdiv(slice_num_right, 100);
 
-    uint16_t sample_size = 12500;
-    uint16_t default_hz = 100;
-    uint16_t target_hz = 25;
-
-    wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap; // make it go slower
+    wrap = 12500;
+    normal_speed = wrap;
     slow_speed = 0;
-    
+
     // Calibrate
-    left_speed = wrap*0.8;
+    left_speed = wrap * 0.5; // original is 0.8
+    // left_speed = wrap * 0.3;
 
     // printf("Normal speed is %d\n", normal_speed);
     // Set period of 12500 cycles
@@ -325,13 +344,14 @@ void pwm_control()
     pwm_set_enabled(slice_num_right, true);
 }
 
+// Set motor_command
 void set_motor_command(char *data)
 {
-    // Set motor_command
     snprintf(motor_command, sizeof(motor_command), "%s", data);
 }
 
-void move_straight() {
+void move_straight()
+{
 
     // // Move for 1 seconds
     // sleep_ms(650);
@@ -343,75 +363,227 @@ void move_straight() {
 
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
-
-    
-
-    
-
-    
 }
 
 void react_to_commands(__unused void *params)
 {
+
     while (true)
     {
-
-       
 
         // probably need this so that other task can get some time for their
         // allocation
         vTaskDelay(100);
-        if (turning == false)
+        State tempState = getState();
+        // printf("Current State: %d\t Msg: %s\n", tempState, motor_command);
+        // if (tempState != MAPPED_FRONT &&
+        //     tempState != MAPPED_LEFT &&
+        //     tempState != MAPPED_RIGHT)
+        // {
+        if (strcmp(motor_command, "left=90") == 0)
         {
-            // If command is "left=90"
-            if (strcmp(motor_command, "left=90") == 0)
-            {
-                // turn_left(90);
-                printf("Turning left now...");
-                turning = true;
-                // once detect white, turn 90 straight away
-                turn_left(90);
-                turning = false;
-                // Reset motor_command
-                snprintf(motor_command, sizeof(motor_command), "%s", "");
-            }
-            else if (strcmp(motor_command, "right=90") == 0)
-            {
-                printf("Turning right now...");
-                turning = true;
-                turn_right(90);
-
-                turning = false;
-                // Reset motor_command
-                snprintf(motor_command, sizeof(motor_command), "%s", "");
-            }
-            else if (strcmp(motor_command, "U-turn=180") == 0)
-            {
-                printf("Too near to obstacles... Uturn now...");
-                turning = true;
-                u_turn();
-                turning = false;
-                snprintf(motor_command, sizeof(motor_command), "%s", "");
-            }
-            else if (strcmp(motor_command, "stop=1") == 0)
-            {
-                // turn_left(90);
-                // printf("Turning left now...");
-                turning = true;
-                // once detect white, turn 90 straight away
-                move_stop();
-                turn_left(90);
-                turning = false; // this line will make it move immediately on next loop (goes to else statement)
-                // Reset motor_command
-                snprintf(motor_command, sizeof(motor_command), "%s", "");
-            }
-            else
-            {
-                pid_speed_left();
-                pid_speed_right();
-                move_straight();
-            }
+            setState(TURN_LEFT);
+            // turn_left(90);
+            // printf("Turning left now...");
+            // turning = true;
+            // once detect white, turn 90 straight away
+            // turn_left(90);
+            // turning = false;
+            // Reset motor_command
+            // snprintf(motor_command, sizeof(motor_command), "%s", "");
         }
+        else if (strcmp(motor_command, "right=90") == 0)
+        {
+            setState(TURN_RIGHT);
+            // printf("Turning right now...");
+            // turning = true;
+            // turn_right(90);
+
+            // turning = false;
+            // Reset motor_command
+            // snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else if (strcmp(motor_command, "U-turn=180") == 0)
+        {
+            // setState(UTURN);
+            // printf("Too near to obstacles... Uturn now...");
+            // turning = true;
+            // u_turn();
+            // turning = false;
+            // snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else if (strcmp(motor_command, "stop=1") == 0)
+        {
+            setState(IDLE);
+            // turn_left(90);
+            // printf("Turning left now...");
+            // turning = true;
+            // // once detect white, turn 90 straight away
+            // move_stop();
+            // turn_left(90);
+            // turning = false; // this line will make it move immediately on next loop (goes to else statement)
+            // // Reset motor_command
+            // snprintf(motor_command, sizeof(motor_command), "%s", "");
+        }
+        else if (strcmp(motor_command, "mapping-black=1") == 0)
+        {
+            setState(MAPPED_FRONT);
+            // printf("SETTING STATE FOR MAPPED FRONT***\n");
+        }
+        else if (strcmp(motor_command, "mapping-black=2") == 0)
+        {
+            setState(MAPPED_LEFT);
+            // printf("SETTING STATE FOR MAPPED LEFT***\n");
+        }
+        else if (strcmp(motor_command, "mapping-black=3") == 0)
+        {
+            // if rch here means front, left, right all BLACK
+            setState(MAPPED_RIGHT);
+            // printf("SETTING STATE FOR MAPPED RIGHT***\n");
+        }
+        else if (strcmp(motor_command, "mapping-white=1") == 0)
+        {
+            setState(MOVING);
+        }
+        else if (strcmp(motor_command, "mapping-white=2") == 0)
+        {
+            setState(MOVING);
+        }
+        else if (strcmp(motor_command, "mapping-white=3") == 0)
+        {
+            setState(MOVING);
+        }
+        else
+        {
+
+            // if ((getState() != MAPPING_FRONT) ||
+            //     (getState() != MAPPING_LEFT) ||
+            //     (getState() != MAPPING_RIGHT))
+            // {
+            // printf("Resetting\n");
+            // setState(MOVING);
+            // }
+        }
+        // }
+
+        // if (strcmp(motor_command, "mapping-white=1") == 0)
+        // {
+        //     setState(MOVING);
+        // }
+        // else if (strcmp(motor_command, "mapping-white=2") == 0)
+        // {
+        //     setState(MOVING);
+        // }
+        // else if (strcmp(motor_command, "mapping-white=3") == 0)
+        // {
+        //     setState(MOVING);
+        // }
+        // Reset Command
+        snprintf(motor_command, sizeof(motor_command), "%s", "");
+
+        tempState = getState();
+        // printf("Updated State: %d\n", tempState);
+        switch (tempState)
+        {
+        case IDLE:
+
+            move_stop();
+            break;
+        case MOVING:
+
+            pid_speed_left();
+            pid_speed_right();
+            move_straight();
+            break;
+        case TURN_LEFT:
+
+            turn_left(90);
+            break;
+        case TURN_RIGHT:
+
+            turn_right(90);
+            break;
+        case UTURN:
+
+            u_turn();
+            break;
+        case MAPPED_FRONT:
+            // Will come here if both BLACK
+
+            turn_left(90);
+            // if still detect black now
+
+            // setState(MAPPING_LEFT);
+            break;
+        case MAPPED_LEFT:
+            // Will come here if both BLACK and turning left
+            u_turn();
+            // setState(MAPPED_RIGHT);
+            break;
+        case MAPPED_RIGHT:
+            // Will come here if both BLACK and turning left
+            turn_right(90);
+            break;
+        default:
+            break;
+        }
+        // if (turning == false)
+        // if(getState() == MOVING)
+        // {
+        //     // If command is "left=90"
+        // if (strcmp(motor_command, "left=90") == 0)
+        // {
+        //     setState(TURNING);
+        //     // turn_left(90);
+        //     printf("Turning left now...");
+        //     turning = true;
+        //     // once detect white, turn 90 straight away
+        //     turn_left(90);
+        //     turning = false;
+        //     // Reset motor_command
+        //     snprintf(motor_command, sizeof(motor_command), "%s", "");
+        // }
+        // else if (strcmp(motor_command, "right=90") == 0)
+        // {
+        //     setState(TURNING);
+        //     printf("Turning right now...");
+        //     turning = true;
+        //     turn_right(90);
+
+        //     turning = false;
+        //     // Reset motor_command
+        //     snprintf(motor_command, sizeof(motor_command), "%s", "");
+        // }
+        // else if (strcmp(motor_command, "U-turn=180") == 0)
+        // {
+        //     setState(TURNING);
+        //     printf("Too near to obstacles... Uturn now...");
+        //     turning = true;
+        //     u_turn();
+        //     turning = false;
+        //     snprintf(motor_command, sizeof(motor_command), "%s", "");
+        // }
+        // else if (strcmp(motor_command, "stop=1") == 0)
+        // {
+        //     setState(IDLE);
+        //     // turn_left(90);
+        //     // printf("Turning left now...");
+        //     turning = true;
+        //     // once detect white, turn 90 straight away
+        //     move_stop();
+        //     turn_left(90);
+        //     turning = false; // this line will make it move immediately on next loop (goes to else statement)
+        //     // Reset motor_command
+        //     snprintf(motor_command, sizeof(motor_command), "%s", "");
+        // }
+        // else
+        // {
+        //     setState(MOVING);
+        //     pid_speed_left();
+        //     pid_speed_right();
+        //     move_straight();
+        // }
+        // }
     }
 }
 void motor_main()

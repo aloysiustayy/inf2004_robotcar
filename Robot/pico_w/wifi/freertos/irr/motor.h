@@ -11,7 +11,22 @@
 #define RIGHT_WHEEL_PIN1 21
 #define RIGHT_WHEEL_PIN2 20
 
+// Variable declaration
+typedef enum
+{
+    MOVING,
+    IDLE,
+    TURN_LEFT,
+    TURN_RIGHT,
+    UTURN,
+    MAPPED_FRONT,
+    MAPPED_LEFT,
+    MAPPED_RIGHT
+} State;
+
 // Function declarations
+void setState(State newState);
+State getState();
 void setCarTurning(bool val);
 bool isCarTurning();
 void motor_init();

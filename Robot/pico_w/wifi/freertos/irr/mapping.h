@@ -81,3 +81,6 @@ void insertMazeCell(MazeCell **maze, int row, int col, CellContent content);
 void updateMaze(MazeCell **maze, RobotPosition *robot, int side);
 void mapping_thread();
 void mapping_main();
+
+// This is my grid.
+// #define grid [10][10];

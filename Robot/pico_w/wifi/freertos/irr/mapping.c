@@ -8,6 +8,7 @@
 #include "hardware/i2c.h"
 #include "math.h"
 #include "stdint.h"
+#include "encoder.h"
 #include "mapping.h"
 
 // void set_direction(int side)
@@ -123,20 +124,23 @@ MazeCell *createMazeCell(int row, int col, CellContent content)
 // Function to insert a new cell at the end of the maze list
 void insertMazeCell(MazeCell **maze, int row, int col, CellContent content)
 {
-    MazeCell *newCell = createMazeCell(row, col, content);
-    if (*maze == NULL)
-    {
-        *maze = newCell;
-    }
-    else
-    {
-        MazeCell *current = *maze;
-        while (current->next != NULL)
-        {
-            current = current->next;
-        }
-        current->next = newCell;
-    }
+    // MazeCell *newCell = createMazeCell(row, col, content);
+    // if (*maze == NULL)
+    // {
+    //     *maze = newCell;
+    // }
+    // else
+    // {
+    //     MazeCell *current = *maze;
+    //     while (current->next != NULL)
+    //     {
+    //         current = current->next;
+    //     }
+    //     current->next = newCell;
+    // }
+
+    // Insert grid
+    // grid[row][col] = content;
 }
 
 // Function to find a cell in the maze linked list based on row and column
@@ -184,62 +188,63 @@ void updateMaze(MazeCell **maze, RobotPosition *robot, int side)
 {
     // // Assuming the robot turned left
     // robot->direction = (robot->direction -) % 4; // Rotate left
-    if (side == 0)
-    {
-        // Left
-        switch (robot->direction)
-        {
-        case NORTH:
-            robot->direction = EAST;
-            break;
-        case SOUTH:
-            robot->direction = WEST;
-            break;
-        case EAST:
-            robot->direction = SOUTH;
-            break;
-        case WEST:
-            robot->direction = NORTH;
-            break;
-        default:
-            break;
-        }
-    }
-    else if (side == 1)
-    {
-        // Left
-        switch (robot->direction)
-        {
-        case NORTH:
-            robot->direction = WEST;
-            break;
-        case SOUTH:
-            robot->direction = EAST;
-            break;
-        case EAST:
-            robot->direction = SOUTH;
-            break;
-        case WEST:
-            robot->direction = NORTH;
-            break;
-        default:
-            break;
-        }
-    }
+    // if (side == 0)
+    // {
+    //     // Left
+    //     switch (robot->direction)
+    //     {
+    //     case NORTH:
+    //         robot->direction = EAST;
+    //         break;
+    //     case SOUTH:
+    //         robot->direction = WEST;
+    //         break;
+    //     case EAST:
+    //         robot->direction = SOUTH;
+    //         break;
+    //     case WEST:
+    //         robot->direction = NORTH;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     printf("Robot's position %d\n", robot->direction);
+    // }
+    // else if (side == 1)
+    // {
+    //     // Left
+    //     switch (robot->direction)
+    //     {
+    //     case NORTH:
+    //         robot->direction = WEST;
+    //         break;
+    //     case SOUTH:
+    //         robot->direction = EAST;
+    //         break;
+    //     case EAST:
+    //         robot->direction = SOUTH;
+    //         break;
+    //     case WEST:
+    //         robot->direction = NORTH;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    // }
 
-    // Calculate the next cell based on the current direction
-    MazeCell *nextCell = getNextCell(findCellInList(*maze, robot->row, robot->col), robot->direction);
+    // // Calculate the next cell based on the current direction
+    // MazeCell *nextCell = getNextCell(findCellInList(*maze, robot->row, robot->col), robot->direction);
 
-    // Update the maze based on the new robot position and the next cell
-    if (nextCell != NULL)
-    {
-        // Update the content of the next cell (e.g., mark it as the path the robot has taken)
-        nextCell->content = PATH;
-        // Update the robot's position
-        robot->row = nextCell->row;
-        robot->col = nextCell->col;
-    }
-    insertMazeCell(maze, robot->row, robot->col, PATH);
+    // // Update the maze based on the new robot position and the next cell
+    // if (nextCell != NULL)
+    // {
+    //     // Update the content of the next cell (e.g., mark it as the path the robot has taken)
+    //     nextCell->content = PATH;
+    //     // Update the robot's position
+    //     robot->row = nextCell->row;
+    //     robot->col = nextCell->col;
+    // }
+    // insertMazeCell(maze, robot->row, robot->col, PATH);
 }
 
 // Function to move the robot in a given direction and update its position
@@ -277,7 +282,31 @@ void printMaze(MazeCell *maze)
     }
     printf("\n");
 }
+bool isNewBlock()
+{
 
+    float left_dist = get_distance(0);
+    float right_dist = get_distance(1);
+    float dist = (left_dist + right_dist) / 2;
+
+    if (dist >= 17.2f)
+    {
+        // -1 will reset both side
+        reset_distance(-1);
+        return true;
+    }
+
+    return false;
+}
+// int grid[10][10];
+// void setGrid(int row, int col, CellContent content)
+// {
+//     grid[row][col] = content;
+// }
+// int *grid()
+// {
+//     return grid;
+// }
 void mapping_thread(__unused void *params)
 {
     // stdio_init_all();
@@ -309,10 +338,26 @@ void mapping_thread(__unused void *params)
     robot->row = 0;
     robot->direction = NORTH;
 
-    insertMazeCell(0, 0, START);
+    // insertMazeCell(&maze, 0, 0, START);
+
+    // Init 6x4 grid
+    for (int row = 0; row < 12; row++)
+    {
+        for (int col = 0; col < 12; col++)
+        {
+            insertMazeCell(&maze, row, col, EMPTY);
+        }
+    }
     while (1)
     {
         vTaskDelay(100);
+        // printf("Get dist %.2f\n", get_distance(0));
+        if (isNewBlock())
+        {
+            // Start mapping
+        }
+
+        // printf("Is new block %d\n", isNewBlock());
         // Update maze based on sensor readings and robot position
         // updateMaze(&maze, &robot, );
 
@@ -320,7 +365,7 @@ void mapping_thread(__unused void *params)
         // moveRobot(&robot);
 
         // Print the maze to see the updated layout
-        printMaze(maze);
+        // printMaze(maze);
 
         // Implement web server code to display maze data
         // This might involve using a library like lwIP or other networking libraries
@@ -329,9 +374,9 @@ void mapping_thread(__unused void *params)
     // Free allocated memory when done
     while (maze != NULL)
     {
-        MazeCell *temp = maze;
-        maze = maze->next;
-        free(temp);
+        // MazeCell *temp = maze;
+        // maze = maze->next;
+        // free(temp);
     }
 }
 

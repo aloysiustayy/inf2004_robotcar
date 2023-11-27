@@ -1,12 +1,14 @@
 #include <stdio.h>
+#include <time.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include "motor.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "message_buffer.h"
 #include "queue.h"
-#include <time.h>
+
+#include "motor.h"
+#include "global_defined.h"
 
 #define NUM_OF_PINS 2
 #define LEFT_VCC_PIN 14
@@ -33,8 +35,18 @@ void gpio_event_stringg(char *buf, uint32_t events);
 uint32_t last_btn_press[] = {1, 1};
 // uint32_t last_btn_press_left = 0;
 // uint32_t last_btn_press_right = 0;
-// Clock Set Up for debouncing
 
+int side_arr[3];
+void set_side_arr(int side, int data)
+{
+    side_arr[side] = data;
+}
+int *get_side_arr()
+{
+    return side_arr;
+}
+
+// Clock Set Up for debouncing
 clock_t clock()
 {
     return (clock_t)time_us_64() / 10000;
@@ -178,17 +190,32 @@ alarm_callback(alarm_id_t id, void *user_data)
 
     printf("%d\n", cur_pin);
 
-    if (gpio_get(cur_pin) == 0)
+    // if (gpio_get(cur_pin) == 0)
+    // {
+    //     // this is white
+    //     if (cur_pin == analog_pins[0])
+    //     {
+    //         send_sensor_data("left", 90);
+    //     }
+    //     else if (cur_pin == analog_pins[1])
+    //     {
+    //         send_sensor_data("right", 90);
+    //     }
+    // }
+    bool leftSensor = gpio_get(analog_pins[0]);
+    bool rightSensor = gpio_get(analog_pins[1]);
+    if (leftSensor == BLACK &&
+        rightSensor == BLACK)
     {
-        // this is white
-        if (cur_pin == analog_pins[0])
-        {
-            send_sensor_data("left", 90);
+        // Still black, BOUNDARY
+        printf("This is boundary");
+        send_sensor_data("mapping-black", 1);
         }
-        else if (cur_pin == analog_pins[1])
-        {
-            send_sensor_data("right", 90);
-        }
+    else if (leftSensor == WHITE &&
+             rightSensor == WHITE)
+    {
+        // Barcode.
+        printf("This is barcode");
     }
 
     // Can return a value here in us to fire in the future
@@ -238,58 +265,129 @@ void detectLines(__unused void *params)
                 set_white(analog_pins[i]);
             }
             // }
-            
-            if (sensor[i] != prev_sensor[i])
+
+            // if (sensor[i] != prev_sensor[i])
+            // {
+            // printf("Left Floor %d\tRight Floor %d\tFront Floor %d\n", get_side_arr()[LEFT], get_side_arr()[RIGHT], get_side_arr()[FRONT]);
+            // Check if both are black and not mapping right now
+            // Start checking
+            if (sensor[0] == BLACK && sensor[1] == BLACK)
             {
-                // Check if both are black
-                if (sensor[0] == BLACK && sensor[1] == BLACK)
+                // printf("both black\n");
+                // send_sensor_data("left", 90);
+                // send_sensor_data("stop", 1);
+                // Call alarm in fking short time to check if its still black
+                // If still black: BOUNDARY
+                // If got become white: BARCODE
+                // TODO: Play with timer on barcode see can detect barcode or not
+                // if ((getState() != MAPPING_FRONT) ||
+                //     (getState() != MAPPING_LEFT) ||
+                //     (getState() != MAPPING_RIGHT))
+                // {
+                // }
+                switch (getState())
                 {
-                    printf("both black");
-                    // send_sensor_data("left", 90);
-                    send_sensor_data("stop", 1);
+                case MAPPED_FRONT:
+                    // now try to map left
+                    if (get_side_arr()[LEFT] == WHITE)
+                    {
+                        // Sending this will make it u_turn()
+                        send_sensor_data("mapping-black", 2);
+                    }
+                    break;
+                case MAPPED_LEFT:
+                    set_side_arr(LEFT, BLACK);
+                    if (get_side_arr()[LEFT] == WHITE)
+                    {
+                        send_sensor_data("mapping-black", 3);
+                    }
+                    break;
+                case MAPPED_RIGHT:
+                    set_side_arr(RIGHT, BLACK);
+                    break;
+                default:
+                    // If i detect black when moving forward
+                    if (get_side_arr()[FRONT] == WHITE)
+                    {
+                        // Added alarm here to differentiate between barcode / boundary
+                        add_alarm_in_ms(100, alarm_callback, NULL, false);
+                    }
+                    set_side_arr(FRONT, BLACK);
+                    break;
                 }
-                // char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
-
-                // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                // {
-                // printf("Turning right now");
-                // printf("Sensor %d detect %s\n", analog_pins[i], line_colour);
-                // if (analog_pins[i] == LEFT_ANALOG_PIN)
-                // {
-                //     send_sensor_data("left", 90);
-                // }
-                // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
-                // {
-                //     send_sensor_data("right", 90);
-                // }
-                // cur_pin = analog_pins[i];
-                // add_alarm_in_ms(600, alarm_callback, NULL, false);
-                // if(sensor[0] == BLACK && sensor[1] == BLACK){
-                //
-                // }
-                // }
-                // if (analog_pins[i] == LEFT_ANALOG_PIN)
-                // {
-                //     printf("Left IR Sensor detected: %s\n", line_colour);
-                // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                // {
-                //     printf("Turning left right now");
-                //     // turn_left(90);
-                //     send_sensor_data("left", 90);
-                // }
-                // }
-                // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
-                // {
-                //     // printf("Right IR Sensor detected: %s\n", line_colour);
-                //     // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
-                //     // {
-                //     //     printf("Turning right right now");
-
-                //     // }
-                // }
-
-                prev_sensor[i] = sensor[i];
             }
+            else if (sensor[i] == WHITE && sensor[i] == WHITE)
+            {
+                switch (getState())
+                {
+                case MAPPED_FRONT:
+                    // If i am facing left right now, and i detect both white
+                    send_sensor_data("mapping-white", 2);
+
+                    // So i move in my current direction
+                    // FRONT was my old FRONT (before turning), so i reset it
+                    set_side_arr(FRONT, WHITE);
+                    break;
+                case MAPPED_LEFT:
+                    set_side_arr(LEFT, WHITE);
+                    send_sensor_data("mapping-white", 3);
+                    // means can move straight
+                    break;
+                case MAPPED_RIGHT:
+                    set_side_arr(RIGHT, WHITE);
+                    break;
+                default:
+                    set_side_arr(FRONT, WHITE);
+                    send_sensor_data("mapping-white", 1);
+                    break;
+                }
+            }
+            // if (sensor[0] == WHITE && prev_sensor[0] == BLACK &&
+            //     sensor[1] == WHITE && prev_sensor[1] == BLACK)
+            // {
+            // }
+            // char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
+
+            // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+            // {
+            // printf("Turning right now");
+            // printf("Sensor %d detect %s\n", analog_pins[i], line_colour);
+            // if (analog_pins[i] == LEFT_ANALOG_PIN)
+            // {
+            //     send_sensor_data("left", 90);
+            // }
+            // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
+            // {
+            //     send_sensor_data("right", 90);
+            // }
+            // cur_pin = analog_pins[i];
+            // add_alarm_in_ms(600, alarm_callback, NULL, false);
+            // if(sensor[0] == BLACK && sensor[1] == BLACK){
+            //
+            // }
+            // }
+            // if (analog_pins[i] == LEFT_ANALOG_PIN)
+            // {
+            //     printf("Left IR Sensor detected: %s\n", line_colour);
+            // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+            // {
+            //     printf("Turning left right now");
+            //     // turn_left(90);
+            //     send_sensor_data("left", 90);
+            // }
+            // }
+            // else if (analog_pins[i] == RIGHT_ANALOG_PIN)
+            // {
+            //     // printf("Right IR Sensor detected: %s\n", line_colour);
+            //     // if (sensor[i] == WHITE && prev_sensor[i] == BLACK)
+            //     // {
+            //     //     printf("Turning right right now");
+
+            //     // }
+            // }
+
+            prev_sensor[i] = sensor[i];
+            // }
         }
     }
 }
