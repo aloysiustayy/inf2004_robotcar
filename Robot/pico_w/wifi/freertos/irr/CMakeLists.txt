@@ -26,6 +26,8 @@
         global_defined.h
         gpio_handler.c
         gpio_handler.h
+        mapping.c
+        mapping.h
         )
     
     # target_compile_definitions(irr_sensor_sys PRIVATE

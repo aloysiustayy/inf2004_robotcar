@@ -22,6 +22,7 @@
 #include "encoder.h"
 #include "magnetometer.h"
 #include "obstacle.h"
+#include "mapping.h"
 
 #ifndef RUN_FREERTOS_ON_CORE
 #define RUN_FREERTOS_ON_CORE 0
@@ -242,14 +243,14 @@ void vLaunch(void)
     // // magnetometer_main(); // Run mag
     motor_main();
 
-    // TaskHandle_t ultrasonicTask;
-    // xTaskCreate(ultrasonic_main,
-    //             "ultrasonicThread",
-    //             configMINIMAL_STACK_SIZE,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             &ultrasonicTask);
-
+    TaskHandle_t ultrasonicTask;
+    xTaskCreate(ultrasonic_main,
+                "ultrasonicThread",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                tskIDLE_PRIORITY,
+                &ultrasonicTask);
+    mapping_main();
     // Start all queue tasks
     start_recv_msg_task();
     vTaskStartScheduler();
