@@ -56,8 +56,8 @@ Visual Studio Code will ask if you want to configure the pico-examples project w
 
 ## How to Run
 1. Navigate to the Integration Folder (`Robot/pico w/wifi/freertos/irr`).
-2. Compile the `irr_sensor_sys` using CMake.
-3. Flash the generated `elf` file into Pico W with all the sensor pins attached.
+2. Compile the `irr_sensor_sys.elf` using CMake.
+3. Flash the generated `uf2` file into Pico W with all the sensor pins attached.
 4. Test it out on a maze.
 
 ## Flow Diagram
