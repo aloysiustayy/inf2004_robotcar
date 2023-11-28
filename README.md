@@ -1,12 +1,12 @@
 # INF2004 Robot Car
 
 ## Individual Driver
-- All the individual components C files is located in `driver` folder.
+- All the individual components C files are located in the `driver` folder.
 
 ## Integration Folder
-- All the integrated files is located in the following [directory](https://github.com/aloysiustayy/inf2004_robotcar/tree/main/Robot/pico_w/wifi/freertos/irr) 
+- All the integrated files are located in the following [directory](https://github.com/aloysiustayy/inf2004_robotcar/tree/main/Robot/pico_w/wifi/freertos/irr) 
 
-## Equiments
+## Equipment
 - A computer has the Pico C/C++ SDK installed
 - Micro-USB Cable
 - Raspberry Pi Pico w
