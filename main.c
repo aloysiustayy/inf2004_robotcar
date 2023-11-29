@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ROW 13
 #define COL 9
@@ -35,9 +36,35 @@ typedef struct
 } Robot;
 Robot robot;
 
+char *dirToText()
+{
+    char *text;
+
+    switch (robot.curDir)
+    {
+    case NORTH:
+        text = strdup("NORTH");
+        break;
+    case EAST:
+        text = strdup("EAST");
+        break;
+    case SOUTH:
+        text = strdup("SOUTH");
+        break;
+    case WEST:
+        text = strdup("WEST");
+        break;
+    default:
+        text = strdup(""); // Empty string for unknown direction
+    }
+
+    return text;
+}
 void printRobotPos()
 {
-    printf("I am at (%d, %d) facing %d right now\n", robot.x, robot.y, robot.curDir);
+    char *directionText = dirToText();
+
+    printf("I am at (%d, %d) facing %s right now\n", robot.x, robot.y, directionText);
 }
 
 int mazeOnGround[ROW][COL] = {
@@ -187,9 +214,10 @@ void checkFront(Cell **Path)
 
     // printf("I am facing %d right now\n", robot.curDir);
 }
+
+// Move forward relative to Robot's direction
 void moveForward()
 {
-
     switch (robot.curDir)
     {
     case NORTH:
@@ -211,6 +239,7 @@ void moveForward()
     }
 }
 
+// Turning relative to Robot's direction
 void turnLeft()
 {
     switch (robot.curDir)
@@ -222,17 +251,14 @@ void turnLeft()
     case EAST:
         // x--
         robot.curDir = NORTH;
-
         break;
     case SOUTH:
         // y--
         robot.curDir = EAST;
-
         break;
     case WEST:
         // x++
         robot.curDir = SOUTH;
-
         break;
     }
 }
@@ -261,19 +287,22 @@ void turnRight()
         break;
     }
 }
+
 void Mapping()
 {
     //
 }
+
 int main()
 {
 
-    Cell *Path = NULL; // Declare a pointer to Cell and initialize it to NULL
+    // Declare a pointer to Path and initialize it to NULL
+    Cell *Path = NULL;
 
     // Call the function to set the start cell
     setStartCell(&Path);
 
-    // Init Robot
+    // Initialise Robot
     robot.x = Path->x;
     robot.y = Path->y;
     robot.curDir = NORTH;
@@ -284,13 +313,13 @@ int main()
     moveForward();
     printRobotPos();
 
-    turnLeft();
+    // turnLeft();
     turnLeft();
 
     printRobotPos();
-    turnRight();
     // turnRight();
-    printRobotPos();
+    // // turnRight();
+    // printRobotPos();
     // moveForward();
     // turnLeft();
     // moveForward();
