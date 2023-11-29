@@ -2,6 +2,7 @@
 
 ## Individual Driver
 - All the individual components C files are located in the `driver` folder.
+- Black box testing had been conducted and documented in the folder as well.
 
 ## Integration Folder
 - All the integrated files are located in the following [directory](https://github.com/aloysiustayy/inf2004_robotcar/tree/main/Robot/pico_w/wifi/freertos/irr) 
