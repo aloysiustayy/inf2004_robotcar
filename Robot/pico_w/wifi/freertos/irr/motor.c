@@ -124,18 +124,33 @@ void move_stop()
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, 0);
 }
 
+void move_straight() {
+
+    // // Move for 1 seconds
+    // sleep_ms(650);
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, 0);
+    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, 0);
+
+    // // Stop for 2 seconds
+    // sleep_ms(2000);
+
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
+    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
+
+}
+
 void turn_right(uint8_t degree)
 {
     // printf("Notch for left should be more than right\n");
     printf("Turning right by %d degree now\n", degree);
 
-    move_stop();
-    sleep_ms(800);
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
+    move_backward();
+    vTaskDelay(500);
+    move_forward();
+    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, slow_speed);
 
-    // Reset LEFT notch because to turn right, left wheel encoder's notch
-    // should be 0 to calculate how many notch it has travelled
+
     reset_notch(LEFT);
 
     // This var will contain the notch count needed to turn by 'degree'
@@ -143,76 +158,47 @@ void turn_right(uint8_t degree)
 
     while (true)
     {
-        if (get_notch(LEFT) > notch_threshold)
+        if (get_notch(LEFT) > 4)
         {
             break;
         }
     }
 
-    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
+    move_stop();
+    move_straight();
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
-    sleep_ms(500);
+    // sleep_ms(500);
+    vTaskDelay(500);
 }
 
 void turn_left(uint8_t degree)
 {
-    // printf("Notch for right should be more than left\n");
-    // printf("Turning left by %d degree now\n", degree);
-    // move_stop();
-    // sleep_ms(500);
-    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
-    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
-
-    // // Make left wheel go backwards
-    // gpio_put(LEFT_WHEEL_PIN1, 1);
-    // gpio_put(LEFT_WHEEL_PIN2, 0);
-
-    // // Reset RIGHT notch because to turn left, right wheel encoder's notch
-    // // should be 0 to calculate how many notch it has travelled
-    // reset_notch(RIGHT);
-
-    // // This var will contain the notch count needed to turn by 'degree'
-    // uint8_t notch_threshold = degree_to_notch(degree) * 1.5f;
-    // while (true)
-    // {
-    //     printf("Left Notch is %d\tRight Notch is %d\tThreshold is %d\n", get_notch(LEFT), get_notch(RIGHT), notch_threshold);
-    //     if (get_notch(RIGHT) > notch_threshold)
-    //     {
-    //         break;
-    //     }
-    // }
-
-    // // Make left wheel go straight
-    // gpio_put(LEFT_WHEEL_PIN1, 0);
-    // gpio_put(LEFT_WHEEL_PIN2, 1);
-    // printf("Moving straight now\n");
-    // sleep_ms(500);
-
-    // printf("Notch for left should be more than right\n");
     printf("Turning left by %d degree now\n", degree);
 
-    move_stop();
-    // sleep_ms(800);
+    move_backward();
     vTaskDelay(500);
+    move_forward();
     pwm_set_chan_level(slice_num_left, PWM_CHAN_A, slow_speed);
     pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
 
-    // Reset LEFT notch because to turn right, left wheel encoder's notch
-    // should be 0 to calculate how many notch it has travelled
+
     reset_notch(RIGHT);
 
     // This var will contain the notch count needed to turn by 'degree'
-    uint8_t notch_threshold = degree_to_notch(degree) * 1.5;
+    uint8_t notch_threshold = degree_to_notch(degree) * 3;
 
     while (true)
     {
-        if (get_notch(RIGHT) > notch_threshold)
+        if (get_notch(RIGHT) > 4)
         {
             break;
         }
     }
 
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
+    move_stop();
+    move_straight();
+    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, normal_speed);
     printf("Moving straight now\n");
     // sleep_ms(500);
     vTaskDelay(500);
@@ -303,11 +289,11 @@ void pwm_control()
     uint16_t target_hz = 25;
 
     wrap = sample_size * (default_hz / target_hz);
-    normal_speed = wrap; // make it go slower
+    normal_speed = wrap * 0.6; // make it go slower
     slow_speed = 0;
     
     // Calibrate
-    left_speed = wrap*0.8;
+    left_speed = wrap*0.48;
 
     // printf("Normal speed is %d\n", normal_speed);
     // Set period of 12500 cycles
@@ -331,25 +317,7 @@ void set_motor_command(char *data)
     snprintf(motor_command, sizeof(motor_command), "%s", data);
 }
 
-void move_straight() {
 
-    // // Move for 1 seconds
-    // sleep_ms(650);
-    // pwm_set_chan_level(slice_num_left, PWM_CHAN_A, 0);
-    // pwm_set_chan_level(slice_num_right, PWM_CHAN_B, 0);
-
-    // // Stop for 2 seconds
-    // sleep_ms(2000);
-
-    pwm_set_chan_level(slice_num_left, PWM_CHAN_A, left_speed);
-    pwm_set_chan_level(slice_num_right, PWM_CHAN_B, normal_speed);
-
-    
-
-    
-
-    
-}
 
 void react_to_commands(__unused void *params)
 {

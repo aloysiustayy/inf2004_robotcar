@@ -242,11 +242,19 @@ void detectLines(__unused void *params)
             if (sensor[i] != prev_sensor[i])
             {
                 // Check if both are black
-                if (sensor[0] == BLACK && sensor[1] == BLACK)
+                // if (sensor[0] == BLACK && sensor[1] == BLACK)
+                // {
+                //     printf("both black");
+                //     // send_sensor_data("left", 90);
+                //     send_sensor_data("stop", 1);
+                // }
+                if (sensor[0] == WHITE && sensor[1] == BLACK)
                 {
-                    printf("both black");
-                    // send_sensor_data("left", 90);
-                    send_sensor_data("stop", 1);
+                    send_sensor_data("left", 90);
+                }
+                if (sensor[0] == BLACK && sensor[1] == WHITE)
+                {
+                    send_sensor_data("right", 90);
                 }
                 // char *line_colour = (sensor[i] == BLACK) ? "BLACK" : "WHITE";
 
