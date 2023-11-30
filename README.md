@@ -61,6 +61,11 @@ Visual Studio Code will ask if you want to configure the pico-examples project w
 3. Flash the generated `uf2` file into Pico W with all the sensor pins attached.
 4. Test it out on a maze.
 
+## Mapping Algorithm (BFS)
+1. Run `MappingAlgorithm.c` using GCC.
+2. Look at Serial Monitor for output.
+3. Edit `variable: mazeOnGround` to update maze accordingly.
+
 ## Flow Diagram
 ![alt text](https://github.com/aloysiustayy/inf2004_robotcar/blob/main/FlowChart.jpeg?raw=true)
 
